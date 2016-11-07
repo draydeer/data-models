@@ -1,0 +1,6 @@
+.idea
+*.map
+coverage
+ignore*
+node_modules
+typings

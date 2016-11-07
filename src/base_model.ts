@@ -1,0 +1,685 @@
+
+import {BadParameterError} from "./errors/bad_parameter_error";
+import * as _ from "lodash";
+import {InternalError} from "./errors/internal_error";
+
+export type Dict<T> = _.Dictionary<T>;
+
+export interface BaseModelStatic {
+
+    check(validator: any, value: any): any;
+
+    checkErrorsPromise(validator: any): Promise;
+
+    getDocPk(doc: any): any;
+
+    getDocVersion(doc: any): number;
+
+    getIdKey(): any;
+
+    getPkKey(): any;
+
+    getVersionKey(): any;
+
+    unsetDocPk(doc: any): any;
+
+    setDocPk(doc: any, id: string): any;
+
+    setDocVersion(doc: any, version: number): any;
+
+    unsetDocVersion(doc: any): any;
+
+    deleteAll(params?: Dict<any>, options?: any): Promise;
+
+    deleteOne(params?: Dict<any>, options?: any): Promise;
+
+    deleteOneByPk(pk: any): Promise;
+
+    selectAll(params?: Dict<any>, options?: any): Promise;
+
+    selectAllIn(key: string, inList: any[], options?: any): Promise;
+
+    selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise;
+
+    selectAllAsArrayIn(key: string, inList: any[], options?: any, raw?: boolean): Promise;
+
+    selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise;
+
+    selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise;
+
+    selectOneOrNew(params?: Dict<any>, options?: any): Promise;
+
+    selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise;
+
+    selectOneByPkRaw(pk: any, notFoundError?: any): Promise;
+
+    selectOneByPkOrNew(pk: any): Promise;
+
+    insertOne(values: Dict<any>, fullResult?: boolean): Promise;
+
+    updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOneUpsert(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+
+    updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise;
+
+    updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise;
+
+    updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise;
+
+}
+
+function getDocPkComplex(doc: Dict<any>, pk: string[], wantNull?: boolean): Dict<any> {
+    let result = {};
+
+    for (let i = pk.length; i > 0; i --) {
+        if (pk[i] in doc) {
+            result[pk[i]] = doc[pk[i]];
+        } else {
+            return wantNull ? null : {};
+        }
+    }
+
+    return result;
+}
+
+function getDocPkSimple(doc: Dict<any>, pk: string, wantNull?: boolean): any {
+    return pk in doc[pk] ? doc[pk] : (wantNull ? null : doc[pk]);
+}
+
+function setDocPkComplex(doc: Dict<any>, pk: string[], pkValue: Dict<any>): Dict<any> {
+    let result = getDocPkComplex(pkValue, pk, true);
+
+    if (result) {
+        for (let i = pk.length; i > 0; i --) {
+            doc[pk[i]] = result[pk[i]];
+        }
+    }
+
+    return doc;
+}
+
+function setDocPkSimple(doc: Dict<any>, pk: string, pkValue: any): any {
+    doc[pk] = pkValue;
+
+    return doc;
+}
+
+function unsetDocPkComplex(doc: Dict<any>, pk: string[]): any {
+    _.each(pk, (key: string) => delete doc[key]);
+
+    return doc;
+}
+
+function unsetDocPkSimple(doc: Dict<any>, pk: string): any {
+    delete doc[pk];
+
+    return doc;
+}
+
+function setDocPkClassAccessors(cls: any, pk: string|string[]): any {
+    if (_.isArray(pk)) {
+        cls.getDocPk = (d: Dict<any>, n?: boolean) => getDocPkComplex(d, <string[]> pk, n);
+
+        cls.getDocPkDict = (d: Dict<any>, n?: boolean) => getDocPkComplex(d, <string[]> pk, n);
+
+        cls.setDocPk = (d: Dict<any>, v?: boolean) => setDocPkComplex(d, <string[]> pk, v);
+
+        cls.unsetDocPk = (d: Dict<any>) => unsetDocPkComplex(d, <string[]> pk);
+    } else if (_.isString(pk)) {
+        cls.getDocPk = (d: Dict<any>, n?: boolean) => getDocPkSimple(d, <string> pk);
+
+        cls.getDocPkDict = (d: Dict<any>, n?: boolean) => ({[<string> pk]: getDocPkSimple(d, <string> pk)});
+
+        cls.setDocPk = (d: Dict<any>, v?: boolean) => setDocPkSimple(d, <string> pk, v);
+
+        cls.unsetDocPk = (d: Dict<any>) => unsetDocPkSimple(d, <string> pk);
+    } else {
+        throw new InternalError("Pk value must be a string or an array of strings.");
+    }
+
+    return cls;
+}
+
+export class BaseModel {
+
+    // id field alias
+    protected static idKey: number|string = "id";
+
+    // primary key field alias
+    protected static pkKey: string|string[] = "?";
+
+    // [version control] field alias
+    protected static versionKey: string;
+
+    // relations
+    protected static relations: Dict<BaseModelRelation>;
+
+    // active storage source such as collection
+    protected static source: string;
+
+    // validator on select by document id - [id] field
+    protected static validatorOnSelectByDocId: any;
+
+    // validator on select by record id - [_id] field
+    protected static validatorOnSelectByPk: any;
+
+    /**
+     * Get document primary key value.
+     */
+    public static getDocPk(doc: Dict<any>, wantNull?: boolean): any {
+        return setDocPkClassAccessors(this, this.pkKey).getDocPk(doc, wantNull);
+    }
+
+    /**
+     * Get document primary key value as associated value of dictionary.
+     */
+    public static getDocPkDict(doc: Dict<any>, wantNull?: boolean): any {
+        return setDocPkClassAccessors(this, this.pkKey).getDocPkDict(doc, wantNull);
+    }
+
+    /**
+     * Get document version.
+     */
+    public static getDocVersion(doc: Dict<any>): number {
+        return doc[this.versionKey];
+    }
+
+    /**
+     *
+     */
+    public static getIdKey(): any {
+        return this.idKey;
+    }
+
+    /**
+     *
+     */
+    public static getPkKey(): any {
+        return this.pkKey;
+    }
+
+    /**
+     *
+     */
+    public static getVersionKey(): any {
+        return this.versionKey;
+    }
+
+    /**
+     * Set document primary key value.
+     */
+    public static setDocPk(doc: Dict<any>, pk: any): any {
+        return setDocPkClassAccessors(this, this.pkKey).setDocPk(doc, pk);
+    }
+
+    /**
+     * Set document version.
+     */
+    public static setDocVersion(doc: any, version: number): any {
+        doc[this.versionKey] = version;
+
+        return doc;
+    }
+
+    /**
+     * Unset document primary key value.
+     */
+    public static unsetDocPk(doc: any): any {
+        return setDocPkClassAccessors(this, this.pkKey).unsetDocPk(doc);
+    }
+
+    /**
+     * Unset document version.
+     */
+    public static unsetDocVersion(doc: any): any {
+        delete doc[this.versionKey];
+
+        return doc;
+    }
+
+    /**
+     * Check given arguments with validator.
+     */
+    public static check(validator: any, value: any): any {
+        return this.onCheck(validator, value) === true;
+    }
+
+    /**
+     * Create [BadParameterError] instance with errors from validator.
+     */
+    public static checkErrorsPromise(validator: any): Promise {
+        return Promise.reject(new BadParameterError(this.onCheckGetErrors(validator)));
+    }
+
+    /**
+     * Prepare specified to the storage engine record id.
+     */
+    public static recordId(recordId: any): any {
+        return recordId;
+    }
+
+    /**
+     *
+     */
+    public static relation(left: any, right: any, type: string): BaseModelRelation {
+        return new BaseModelRelation(left, right, type);
+    }
+
+    /**
+     *
+     */
+    public static deleteAll(params?: Dict<any>, options?: any): Promise {
+        return Promise.reject(new Error("[deleteAll] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static deleteOne(params?: Dict<any>, options?: any): Promise {
+        return Promise.reject(new Error("[deleteOne] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static deleteOneByPk(pk: any): Promise {
+        return Promise.reject(new Error("[deleteOneByPk] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static selectAll(params?: Dict<any>, options?: any): Promise {
+        return Promise.reject(new Error("[selectAll] is not implemented."));
+    }
+
+    /**
+     * Select all performing [in] values search.
+     */
+    public static selectAllIn(key: string, inList: any[], options?: any): Promise {
+        return this.selectAll({[key]: {$in: inList}}, options);
+    }
+
+    /**
+     *
+     */
+    public static selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise {
+        return Promise.reject(new Error("[selectAllAsArray] is not implemented."));
+    }
+
+    /**
+     * Select all as array performing [in] values search.
+     */
+    public static selectAllAsArrayIn(key: string, inList: any[], options?: any, raw?: boolean): Promise {
+        return this.selectAllAsArray({[key]: {$in: inList}}, options, raw);
+    }
+
+    /**
+     *
+     */
+    public static selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise {
+        return Promise.reject(new Error("[selectOne] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise {
+        return this.selectOne(params, options, false, notFoundError);
+    }
+
+    /**
+     *
+     */
+    public static selectOneOrNew(params?: Dict<any>, options?: any): Promise {
+        return Promise.reject(new Error("[selectOneOrNew] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise {
+        return Promise.reject(new Error("[selectOneByPk] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static selectOneByPkRaw(pk: any, notFoundError?: any): Promise {
+        return this.selectOneByPk(recordId, false, notFoundError);
+    }
+
+    /**
+     *
+     */
+    public static selectOneByPkOrNew(pk: any): Promise {
+        return Promise.reject(new Error("[selectOneByPkOrNew] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static insertOne(values: Dict<any>, fullResult?: boolean): Promise {
+        return Promise.reject(new Error("[insertOne] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateAll] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOne] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOneRaw] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOneByPk] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOneByPkRaw] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOneUnset] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOneByPkUnset] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOneUpsert(params: Dict<any> = {}, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOneUpsert] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOneByPkUpsert] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOrInsert] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOrInsertByPk] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise {
+        return Promise.reject(new Error("[updateOrInsertRaw] is not implemented."));
+    }
+
+    /**
+     *
+     */
+    public static delByPk(pk: string): Promise {
+        let temp: any = {
+            pk: pk,
+        };
+
+        if (this.validatorOnSelectByPk && this.check(this.validatorOnSelectByPk, temp) !== true) {
+            return this.checkErrorsPromise(this.validatorOnSelectByPk);
+        }
+
+        return this.deleteOneByPk(temp.pk);
+    }
+
+    /**
+     *
+     */
+    public static oneByDocId(id: string, notFoundError?: any): Promise {
+        let temp: any = {
+            [this.idKey]: id,
+        };
+
+        if (this.validatorOnSelectByDocId && this.check(this.validatorOnSelectByDocId, temp) !== true) {
+            return this.checkErrorsPromise(this.validatorOnSelectByDocId);
+        }
+
+        return this.selectOneRaw({[this.idKey]: temp[this.idKey]}, {}, notFoundError);
+    }
+
+    /**
+     *
+     */
+    public static oneByPk(pk: string, notFoundError?: any): Promise {
+        let temp: any = {
+            pk: pk,
+        };
+
+        if (this.validatorOnSelectByPk && this.check(this.validatorOnSelectByPk, temp) !== true) {
+            return this.checkErrorsPromise(this.validatorOnSelectByPk);
+        }
+
+        return this.selectOneByPkRaw(temp.pk, notFoundError);
+    }
+
+    /**
+     *
+     */
+    public static updByPk(pk: string, values: any): Promise {
+        let temp: any = {
+            pk: pk,
+        };
+
+        if (this.validatorOnSelectByPk && this.check(this.validatorOnSelectByPk, temp) !== true) {
+            return this.checkErrorsPromise(this.validatorOnSelectByPk);
+        }
+
+        return this.updateOneByPk(temp.pk, values);
+    }
+
+    /**
+     * Check of value with custom validator call.
+     */
+    protected static onCheck(validator: any, value: any): boolean {
+        return true;
+    }
+
+    /**
+     * Get errors of custom validator.
+     */
+    protected static onCheckGetErrors(validator: any, checkingResult?: any): any {
+        return null;
+    }
+
+    /**
+     * Constructor.
+     */
+    constructor(values?: any) {
+        if (values) {
+            this.assign(values);
+        }
+    }
+
+    /**
+     *
+     */
+    _() {
+        return _;
+    }
+
+    /**
+     *
+     */
+    public getId(): any {
+        return this.getStaticClass().getDocPk(this);
+    }
+
+    /**
+     *
+     */
+    public getStaticClass(): BaseModelStatic {
+        return <any> (this.constructor);
+    }
+
+    /**
+     * Assign set of values.
+     */
+    public assign(mixed: any) {
+        _.extend(this, mixed);
+
+        return this;
+    }
+
+    /**
+     * Insert record and set new record id.
+     */
+    public insert(options: {} = {}) {
+        return this.getStaticClass().insertOne(
+            _.omitBy(this, this.getStaticClass().setDocVersion(this, 1))
+        ).then((recordId) => {
+            this.getStaticClass().setDocPk(this, recordId);
+        });
+    }
+
+    /**
+     *
+     */
+    public isNew(): boolean {
+        return ! this.getId();
+    }
+
+    /**
+     *
+     */
+    public put(options?: {}) {
+        return this.getId() ? this.updateVersioned(options) : this.insert(options);
+    }
+
+    /**
+     *
+     */
+    public update(options?: {}) {
+        return this.getStaticClass().updateOneByPk(
+            this.getStaticClass().getDocPk(this),
+            _.omitBy(this, _.isUndefined),
+            options
+        );
+    }
+
+    /**
+     * Update with a control of the record version ([getDocVersion] method).
+     *
+     * Record will be updated if the value of version is matching to the value of version in the storage.
+     *
+     * @param options Low level query options.
+     *
+     * @returns {Promise}
+     */
+    public updateVersioned(options: {} = {}) {
+        let $class = this.getStaticClass();
+
+        let $id = $class.getDocPk(this);
+
+        $class.unsetDocPk(this);
+
+        // increment doc version or initiate it
+        if ($class.getVersionKey()) {
+            let $vcUpdate = $class.getDocVersion(this) > 0 ? $class.getDocVersion(this) : void 0;
+
+            if ($class.getDocVersion(this) > 0) {
+                $class.setDocVersion(this, $class.getDocVersion(this) + 1);
+            } else {
+                $class.setDocVersion(this, 1);
+            }
+
+            return this.getStaticClass().updateOne(
+                $class.setDocPk($class.setDocVersion({}, $vcUpdate), $id),
+                _.omitBy(this, _.isUndefined),
+                options
+            ).then(
+                (res: any) => {
+                    $class.setDocPk(this, $id);
+
+                    return res;
+                }
+            );
+        } else {
+            return this.getStaticClass().updateOne(
+                $class.setDocPk({}, $id),
+                _.omitBy(this, _.isUndefined),
+                options
+            ).then(
+                (res: any) => {
+                    $class.setDocPk(this, $id);
+
+                    return res;
+                }
+            );
+        }
+    }
+
+}
+
+export class BaseModelRelation {
+
+    // left key
+    public left: any;
+
+    // right key
+    public right: any;
+
+    // type - belongs, has, hasMany
+    public type: string;
+
+    constructor(left: any, right: any, type: string) {
+        this.left = left;
+        this.right = right;
+        this.type = type;
+    }
+
+}
