@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20161015015725",
+    "mongodb": "registry:npm/mongodb#2.1.0+20160721204323"
+  },
+  "globalDependencies": {
+    "es6-shim": "registry:dt/es6-shim#0.31.2+20160602141504",
+    "jasmine": "registry:dt/jasmine#2.5.0+20161025102649",
+    "node": "registry:dt/node#6.0.0+20161102143327"
+  }
+}
