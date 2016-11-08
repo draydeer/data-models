@@ -14,4 +14,3 @@ var BadParameterError = (function (_super) {
     return BadParameterError;
 }(base_error_1.BaseError));
 exports.BadParameterError = BadParameterError;
-//# sourceMappingURL=bad_parameter_error.js.map

@@ -14,4 +14,3 @@ var InternalError = (function (_super) {
     return InternalError;
 }(base_error_1.BaseError));
 exports.InternalError = InternalError;
-//# sourceMappingURL=internal_error.js.map

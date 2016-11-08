@@ -10,22 +10,12 @@ var BaseModelKnex = (function (_super) {
     function BaseModelKnex() {
         _super.apply(this, arguments);
     }
-    /**
-     * Prepare cursor [where] conditions in mongo-like syntax.
-     *
-     * @param cursor Cursor object.
-     * @param where Where conditions.
-     * @param cb Callback to return stream object. If not provided query result will be fetched entirely (usable for single documents).
-     *
-     * @returns {any}
-     */
     BaseModelKnex.getCursorWhere = function (cursor, where, cb) {
         if (this._().isEmpty(where) === false) {
             var paramIndex = 100;
             for (var key in where) {
                 if (where.hasOwnProperty(key)) {
                     if (key === "$or") {
-                        // cur.orWhere(k, where["$or"]);
                         delete where.$or;
                         continue;
                     }
@@ -76,4 +66,3 @@ var BaseModelKnex = (function (_super) {
     return BaseModelKnex;
 }(base_model_1.BaseModel));
 exports.BaseModelKnex = BaseModelKnex;
-//# sourceMappingURL=base_model_knex.js.map

@@ -13,4 +13,3 @@ var BaseModelOrientJs = (function (_super) {
     return BaseModelOrientJs;
 }(base_model_1.BaseModel));
 exports.BaseModelOrientJs = BaseModelOrientJs;
-//# sourceMappingURL=base_model_orientjs.js.map

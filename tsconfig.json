@@ -4,6 +4,11 @@
         "module": "commonjs",
         "outDir": ".",
         "target": "ES5",
-        "rootDir": "."
-    }
+        "rootDir": ".",
+        "experimentalDecorators": true,
+        "removeComments": true
+    },
+    "exclude": [
+        "node_modules"
+    ]
 }

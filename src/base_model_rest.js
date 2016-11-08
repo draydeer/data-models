@@ -13,4 +13,3 @@ var BaseModelRest = (function (_super) {
     return BaseModelRest;
 }(base_model_1.BaseModel));
 exports.BaseModelRest = BaseModelRest;
-//# sourceMappingURL=base_model_rest.js.map

@@ -7,4 +7,3 @@ exports.ModelKnex = base_model_knex_1.BaseModelKnex;
 exports.ModelMongoDb = base_model_mongodb_1.BaseModelMongoDb;
 exports.ModelOrientJs = base_model_orientjs_1.BaseModelOrientJs;
 exports.ModelRest = base_model_rest_1.BaseModelRest;
-//# sourceMappingURL=models.js.map

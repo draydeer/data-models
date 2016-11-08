@@ -5,6 +5,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var base_model_1 = require("./base_model");
+var _ = require("lodash");
 var mongodb = require("mongodb");
 var not_found_error_1 = require("./errors/not_found_error");
 var BaseModelMongoDb = (function (_super) {
@@ -12,9 +13,6 @@ var BaseModelMongoDb = (function (_super) {
     function BaseModelMongoDb() {
         _super.apply(this, arguments);
     }
-    /**
-     * Get MongoDb collection object reference.
-     */
     BaseModelMongoDb.getCollection = function (alias) {
         var _this = this;
         var collection = this.db.collection(alias ? alias : this.collection);
@@ -23,26 +21,6 @@ var BaseModelMongoDb = (function (_super) {
         };
         return collection;
     };
-    /**
-     * Prepare dictionary with potential pk selector.
-     *
-     * @param condition Mixed condition. If the model pk is a string tries to take condition as a primitive value and
-     *      cast it to the ObjectId type:
-     *
-     *      model pk key = "_id"
-     *      condition = "56bf7aa030042aff3e9c9339"
-     *      result = {_id: ObjectId("56bf7aa030042aff3e9c9339")}
-     *
-     *      model pk key = "id"
-     *      condition = ObjectId("56bf7aa030042aff3e9c9339")
-     *      result = {id: ObjectId("56bf7aa030042aff3e9c9339")}
-     *
-     *      model pk key = [...]
-     *      condition = {a: 123}
-     *      result = {a: 123}
-     *
-     * @returns {any}
-     */
     BaseModelMongoDb.pkOrConditionDict = function (condition) {
         if (typeof this.pkKey === "string") {
             if (condition instanceof mongodb.ObjectID) {
@@ -55,9 +33,6 @@ var BaseModelMongoDb = (function (_super) {
         return condition;
         var _a, _b;
     };
-    /**
-     *
-     */
     BaseModelMongoDb.deleteAll = function (params, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -71,9 +46,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.deleteOne = function (params, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -87,9 +59,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.deleteOneByPk = function (pk) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -103,9 +72,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.selectAll = function (params, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -119,9 +85,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.selectAllAsArray = function (params, options, raw) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -133,7 +96,7 @@ var BaseModelMongoDb = (function (_super) {
                     if (raw) {
                         return rs(arr);
                     }
-                    _this._().each(arr, function (val, key) {
+                    _.each(arr, function (val, key) {
                         arr[key] = new _this(val);
                     });
                     rs(arr);
@@ -141,9 +104,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.selectOne = function (params, options, raw, notFoundError) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -156,9 +116,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.selectOneOrNew = function (params, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -171,9 +128,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.selectOneByPk = function (pk, raw, notFoundError) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -186,9 +140,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.selectOneByPkOrNew = function (pk) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -201,9 +152,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.insertOne = function (values, fullResult) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -216,14 +164,11 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateAll = function (params, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
             _this.getCollection()
-                .update(params, { $set: values }, _this._().extend({ multi: true }, options))
+                .update(params, { $set: values }, _.extend({ multi: true }, options))
                 .then(function (doc) {
                 rs(doc.result.nModified);
             }, function (err) {
@@ -231,9 +176,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOne = function (params, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -246,9 +188,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOneRaw = function (params, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -261,9 +200,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOneByPk = function (pk, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -276,9 +212,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOneByPkRaw = function (pk, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -291,9 +224,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOneUnset = function (params, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -306,14 +236,11 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOneByPkUnset = function (pk, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
             _this.getCollection()
-                .updateOne(_this.pkOrConditionDict(pk), _this._().extend({ upsert: true }, options))
+                .updateOne(_this.pkOrConditionDict(pk), _.extend({ upsert: true }, options))
                 .then(function (doc) {
                 doc.matchedCount ? rs(doc.result.nModified) : rj(new not_found_error_1.NotFoundError());
             }, function (err) {
@@ -321,15 +248,12 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOneUpsert = function (params, values, options) {
         var _this = this;
         if (params === void 0) { params = {}; }
         return new Promise(function (rs, rj) {
             _this.getCollection()
-                .updateOne(params, { $set: values }, _this._().extend({ upsert: true }, options))
+                .updateOne(params, { $set: values }, _.extend({ upsert: true }, options))
                 .then(function (doc) {
                 doc.matchedCount ? rs(doc.result.nModified) : rj(new not_found_error_1.NotFoundError());
             }, function (err) {
@@ -337,14 +261,11 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOneByPkUpsert = function (pk, values, options) {
         var _this = this;
         return new Promise(function (rs, rj) {
             _this.getCollection()
-                .updateOne(_this.pkOrConditionDict(pk), { $set: values }, _this._().extend({ upsert: true }, options))
+                .updateOne(_this.pkOrConditionDict(pk), { $set: values }, _.extend({ upsert: true }, options))
                 .then(function (doc) {
                 doc.matchedCount ? rs(doc.result.nModified) : rj(new not_found_error_1.NotFoundError());
             }, function (err) {
@@ -352,9 +273,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOrInsert = function (params, values, insert) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -369,9 +287,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOrInsertByPk = function (pk, values, insert) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -386,9 +301,6 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    /**
-     *
-     */
     BaseModelMongoDb.updateOrInsertRaw = function (params, values, insert) {
         var _this = this;
         return new Promise(function (rs, rj) {
@@ -403,11 +315,8 @@ var BaseModelMongoDb = (function (_super) {
             });
         });
     };
-    // primary key field alias
     BaseModelMongoDb.pkKey = "_id";
-    // [version control] field alias
     BaseModelMongoDb.versionKey = "_vc";
     return BaseModelMongoDb;
 }(base_model_1.BaseModel));
 exports.BaseModelMongoDb = BaseModelMongoDb;
-//# sourceMappingURL=base_model_mongodb.js.map

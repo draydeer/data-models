@@ -1,5 +1,11 @@
 "use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var bad_parameter_error_1 = require("./errors/bad_parameter_error");
+var events_1 = require("events");
 var _ = require("lodash");
 var internal_error_1 = require("./errors/internal_error");
 function getDocPkComplex(doc, pk, wantNull) {
@@ -56,263 +62,139 @@ function setDocPkClassAccessors(cls, pk) {
     }
     return cls;
 }
-var BaseModel = (function () {
-    /**
-     * Constructor.
-     */
+var BaseModel = (function (_super) {
+    __extends(BaseModel, _super);
     function BaseModel(values) {
+        _super.call(this);
         if (values) {
             this.assign(values);
         }
     }
-    /**
-     * Get document primary key value.
-     */
     BaseModel.getDocPk = function (doc, wantNull) {
         return setDocPkClassAccessors(this, this.pkKey).getDocPk(doc, wantNull);
     };
-    /**
-     * Get document primary key value as associated value of dictionary.
-     */
     BaseModel.getDocPkDict = function (doc, wantNull) {
         return setDocPkClassAccessors(this, this.pkKey).getDocPkDict(doc, wantNull);
     };
-    /**
-     * Get document version.
-     */
     BaseModel.getDocVersion = function (doc) {
         return doc[this.versionKey];
     };
-    /**
-     *
-     */
     BaseModel.getIdKey = function () {
         return this.idKey;
     };
-    /**
-     *
-     */
     BaseModel.getPkKey = function () {
         return this.pkKey;
     };
-    /**
-     *
-     */
     BaseModel.getVersionKey = function () {
         return this.versionKey;
     };
-    /**
-     * Set document primary key value.
-     */
     BaseModel.setDocPk = function (doc, pk) {
         return setDocPkClassAccessors(this, this.pkKey).setDocPk(doc, pk);
     };
-    /**
-     * Set document version.
-     */
     BaseModel.setDocVersion = function (doc, version) {
         doc[this.versionKey] = version;
         return doc;
     };
-    /**
-     * Unset document primary key value.
-     */
     BaseModel.unsetDocPk = function (doc) {
         return setDocPkClassAccessors(this, this.pkKey).unsetDocPk(doc);
     };
-    /**
-     * Unset document version.
-     */
     BaseModel.unsetDocVersion = function (doc) {
         delete doc[this.versionKey];
         return doc;
     };
-    /**
-     * Check given arguments with validator.
-     */
     BaseModel.check = function (validator, value) {
         return this.onCheck(validator, value) === true;
     };
-    /**
-     * Create [BadParameterError] instance with errors from validator.
-     */
     BaseModel.checkErrorsPromise = function (validator) {
         return Promise.reject(new bad_parameter_error_1.BadParameterError(this.onCheckGetErrors(validator)));
     };
-    /**
-     * Prepare specified to the storage engine record id.
-     */
     BaseModel.recordId = function (recordId) {
         return recordId;
     };
-    /**
-     *
-     */
     BaseModel.relation = function (left, right, type) {
         return new BaseModelRelation(left, right, type);
     };
-    /**
-     *
-     */
     BaseModel.deleteAll = function (params, options) {
         return Promise.reject(new Error("[deleteAll] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.deleteOne = function (params, options) {
         return Promise.reject(new Error("[deleteOne] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.deleteOneByPk = function (pk) {
         return Promise.reject(new Error("[deleteOneByPk] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.selectAll = function (params, options) {
         return Promise.reject(new Error("[selectAll] is not implemented."));
     };
-    /**
-     * Select all performing [in] values search.
-     */
     BaseModel.selectAllIn = function (key, inList, options) {
         return this.selectAll((_a = {}, _a[key] = { $in: inList }, _a), options);
         var _a;
     };
-    /**
-     *
-     */
     BaseModel.selectAllAsArray = function (params, options, raw) {
         return Promise.reject(new Error("[selectAllAsArray] is not implemented."));
     };
-    /**
-     * Select all as array performing [in] values search.
-     */
     BaseModel.selectAllAsArrayIn = function (key, inList, options, raw) {
         return this.selectAllAsArray((_a = {}, _a[key] = { $in: inList }, _a), options, raw);
         var _a;
     };
-    /**
-     *
-     */
     BaseModel.selectOne = function (params, options, raw, notFoundError) {
         return Promise.reject(new Error("[selectOne] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.selectOneRaw = function (params, options, notFoundError) {
         return this.selectOne(params, options, false, notFoundError);
     };
-    /**
-     *
-     */
     BaseModel.selectOneOrNew = function (params, options) {
         return Promise.reject(new Error("[selectOneOrNew] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.selectOneByPk = function (pk, raw, notFoundError) {
         return Promise.reject(new Error("[selectOneByPk] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.selectOneByPkRaw = function (pk, notFoundError) {
-        return this.selectOneByPk(recordId, false, notFoundError);
+        return this.selectOneByPk(pk, false, notFoundError);
     };
-    /**
-     *
-     */
     BaseModel.selectOneByPkOrNew = function (pk) {
         return Promise.reject(new Error("[selectOneByPkOrNew] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.insertOne = function (values, fullResult) {
         return Promise.reject(new Error("[insertOne] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateAll = function (params, values, options) {
         return Promise.reject(new Error("[updateAll] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOne = function (params, values, options) {
         return Promise.reject(new Error("[updateOne] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOneRaw = function (params, values, options) {
         return Promise.reject(new Error("[updateOneRaw] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOneByPk = function (pk, values, options) {
         return Promise.reject(new Error("[updateOneByPk] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOneByPkRaw = function (pk, values, options) {
         return Promise.reject(new Error("[updateOneByPkRaw] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOneUnset = function (params, values, options) {
         return Promise.reject(new Error("[updateOneUnset] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOneByPkUnset = function (pk, values, options) {
         return Promise.reject(new Error("[updateOneByPkUnset] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOneUpsert = function (params, values, options) {
         if (params === void 0) { params = {}; }
         return Promise.reject(new Error("[updateOneUpsert] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOneByPkUpsert = function (pk, values, options) {
         return Promise.reject(new Error("[updateOneByPkUpsert] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOrInsert = function (params, values, insert) {
         return Promise.reject(new Error("[updateOrInsert] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOrInsertByPk = function (pk, values, insert) {
         return Promise.reject(new Error("[updateOrInsertByPk] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.updateOrInsertRaw = function (params, values, insert) {
         return Promise.reject(new Error("[updateOrInsertRaw] is not implemented."));
     };
-    /**
-     *
-     */
     BaseModel.delByPk = function (pk) {
         var temp = {
             pk: pk,
@@ -322,9 +204,6 @@ var BaseModel = (function () {
         }
         return this.deleteOneByPk(temp.pk);
     };
-    /**
-     *
-     */
     BaseModel.oneByDocId = function (id, notFoundError) {
         var temp = (_a = {},
             _a[this.idKey] = id,
@@ -336,9 +215,6 @@ var BaseModel = (function () {
         return this.selectOneRaw((_b = {}, _b[this.idKey] = temp[this.idKey], _b), {}, notFoundError);
         var _a, _b;
     };
-    /**
-     *
-     */
     BaseModel.oneByPk = function (pk, notFoundError) {
         var temp = {
             pk: pk,
@@ -348,9 +224,6 @@ var BaseModel = (function () {
         }
         return this.selectOneByPkRaw(temp.pk, notFoundError);
     };
-    /**
-     *
-     */
     BaseModel.updByPk = function (pk, values) {
         var temp = {
             pk: pk,
@@ -360,46 +233,25 @@ var BaseModel = (function () {
         }
         return this.updateOneByPk(temp.pk, values);
     };
-    /**
-     * Check of value with custom validator call.
-     */
     BaseModel.onCheck = function (validator, value) {
         return true;
     };
-    /**
-     * Get errors of custom validator.
-     */
     BaseModel.onCheckGetErrors = function (validator, checkingResult) {
         return null;
     };
-    /**
-     *
-     */
     BaseModel.prototype._ = function () {
         return _;
     };
-    /**
-     *
-     */
     BaseModel.prototype.getId = function () {
         return this.getStaticClass().getDocPk(this);
     };
-    /**
-     *
-     */
     BaseModel.prototype.getStaticClass = function () {
         return (this.constructor);
     };
-    /**
-     * Assign set of values.
-     */
     BaseModel.prototype.assign = function (mixed) {
         _.extend(this, mixed);
         return this;
     };
-    /**
-     * Insert record and set new record id.
-     */
     BaseModel.prototype.insert = function (options) {
         var _this = this;
         if (options === void 0) { options = {}; }
@@ -407,40 +259,21 @@ var BaseModel = (function () {
             _this.getStaticClass().setDocPk(_this, recordId);
         });
     };
-    /**
-     *
-     */
     BaseModel.prototype.isNew = function () {
         return !this.getId();
     };
-    /**
-     *
-     */
     BaseModel.prototype.put = function (options) {
         return this.getId() ? this.updateVersioned(options) : this.insert(options);
     };
-    /**
-     *
-     */
     BaseModel.prototype.update = function (options) {
         return this.getStaticClass().updateOneByPk(this.getStaticClass().getDocPk(this), _.omitBy(this, _.isUndefined), options);
     };
-    /**
-     * Update with a control of the record version ([getDocVersion] method).
-     *
-     * Record will be updated if the value of version is matching to the value of version in the storage.
-     *
-     * @param options Low level query options.
-     *
-     * @returns {Promise}
-     */
     BaseModel.prototype.updateVersioned = function (options) {
         var _this = this;
         if (options === void 0) { options = {}; }
         var $class = this.getStaticClass();
         var $id = $class.getDocPk(this);
         $class.unsetDocPk(this);
-        // increment doc version or initiate it
         if ($class.getVersionKey()) {
             var $vcUpdate = $class.getDocVersion(this) > 0 ? $class.getDocVersion(this) : void 0;
             if ($class.getDocVersion(this) > 0) {
@@ -461,12 +294,10 @@ var BaseModel = (function () {
             });
         }
     };
-    // id field alias
     BaseModel.idKey = "id";
-    // primary key field alias
     BaseModel.pkKey = "?";
     return BaseModel;
-}());
+}(events_1.EventEmitter));
 exports.BaseModel = BaseModel;
 var BaseModelRelation = (function () {
     function BaseModelRelation(left, right, type) {
@@ -477,4 +308,3 @@ var BaseModelRelation = (function () {
     return BaseModelRelation;
 }());
 exports.BaseModelRelation = BaseModelRelation;
-//# sourceMappingURL=base_model.js.map

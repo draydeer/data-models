@@ -14,4 +14,3 @@ var NotFoundError = (function (_super) {
     return NotFoundError;
 }(base_error_1.BaseError));
 exports.NotFoundError = NotFoundError;
-//# sourceMappingURL=not_found_error.js.map

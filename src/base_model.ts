@@ -10,7 +10,7 @@ export interface BaseModelStatic {
 
     check(validator: any, value: any): any;
 
-    checkErrorsPromise(validator: any): Promise;
+    checkErrorsPromise(validator: any): Promise<any>;
 
     getDocPk(doc: any): any;
 
@@ -30,57 +30,57 @@ export interface BaseModelStatic {
 
     unsetDocVersion(doc: any): any;
 
-    deleteAll(params?: Dict<any>, options?: any): Promise;
+    deleteAll(params?: Dict<any>, options?: any): Promise<any>;
 
-    deleteOne(params?: Dict<any>, options?: any): Promise;
+    deleteOne(params?: Dict<any>, options?: any): Promise<any>;
 
-    deleteOneByPk(pk: any): Promise;
+    deleteOneByPk(pk: any): Promise<any>;
 
-    selectAll(params?: Dict<any>, options?: any): Promise;
+    selectAll(params?: Dict<any>, options?: any): Promise<any>;
 
-    selectAllIn(key: string, inList: any[], options?: any): Promise;
+    selectAllIn(key: string, inList: any[], options?: any): Promise<any>;
 
-    selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise;
+    selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise<any>;
 
-    selectAllAsArrayIn(key: string, inList: any[], options?: any, raw?: boolean): Promise;
+    selectAllAsArrayIn(key: string, inList: any[], options?: any, raw?: boolean): Promise<any>;
 
-    selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise;
+    selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise<any>;
 
-    selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise;
+    selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise<any>;
 
-    selectOneOrNew(params?: Dict<any>, options?: any): Promise;
+    selectOneOrNew(params?: Dict<any>, options?: any): Promise<any>;
 
-    selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise;
+    selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise<any>;
 
-    selectOneByPkRaw(pk: any, notFoundError?: any): Promise;
+    selectOneByPkRaw(pk: any, notFoundError?: any): Promise<any>;
 
-    selectOneByPkOrNew(pk: any): Promise;
+    selectOneByPkOrNew(pk: any): Promise<any>;
 
-    insertOne(values: Dict<any>, fullResult?: boolean): Promise;
+    insertOne(values: Dict<any>, fullResult?: boolean): Promise<any>;
 
-    updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+    updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOneUpsert(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOneUpsert(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise;
+    updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
 
-    updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise;
+    updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
 
-    updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise;
+    updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise<any>;
 
-    updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise;
+    updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
 
 }
 
@@ -138,7 +138,7 @@ function setDocPkClassAccessors(cls: any, pk: string|string[]): any {
 
         cls.getDocPkDict = (d: Dict<any>, n?: boolean) => getDocPkComplex(d, <string[]> pk, n);
 
-        cls.setDocPk = (d: Dict<any>, v?: boolean) => setDocPkComplex(d, <string[]> pk, v);
+        cls.setDocPk = (d: Dict<any>, v?: any) => setDocPkComplex(d, <string[]> pk, v);
 
         cls.unsetDocPk = (d: Dict<any>) => unsetDocPkComplex(d, <string[]> pk);
     } else if (_.isString(pk)) {
@@ -146,7 +146,7 @@ function setDocPkClassAccessors(cls: any, pk: string|string[]): any {
 
         cls.getDocPkDict = (d: Dict<any>, n?: boolean) => ({[<string> pk]: getDocPkSimple(d, <string> pk)});
 
-        cls.setDocPk = (d: Dict<any>, v?: boolean) => setDocPkSimple(d, <string> pk, v);
+        cls.setDocPk = (d: Dict<any>, v?: any) => setDocPkSimple(d, <string> pk, v);
 
         cls.unsetDocPk = (d: Dict<any>) => unsetDocPkSimple(d, <string> pk);
     } else {
@@ -263,7 +263,7 @@ export class BaseModel extends EventEmitter {
     /**
      * Create [BadParameterError] instance with errors from validator.
      */
-    public static checkErrorsPromise(validator: any): Promise {
+    public static checkErrorsPromise(validator: any): Promise<any> {
         return Promise.reject(new BadParameterError(this.onCheckGetErrors(validator)));
     }
 
@@ -284,189 +284,189 @@ export class BaseModel extends EventEmitter {
     /**
      *
      */
-    public static deleteAll(params?: Dict<any>, options?: any): Promise {
+    public static deleteAll(params?: Dict<any>, options?: any): Promise<any> {
         return Promise.reject(new Error("[deleteAll] is not implemented."));
     }
 
     /**
      *
      */
-    public static deleteOne(params?: Dict<any>, options?: any): Promise {
+    public static deleteOne(params?: Dict<any>, options?: any): Promise<any> {
         return Promise.reject(new Error("[deleteOne] is not implemented."));
     }
 
     /**
      *
      */
-    public static deleteOneByPk(pk: any): Promise {
+    public static deleteOneByPk(pk: any): Promise<any> {
         return Promise.reject(new Error("[deleteOneByPk] is not implemented."));
     }
 
     /**
      *
      */
-    public static selectAll(params?: Dict<any>, options?: any): Promise {
+    public static selectAll(params?: Dict<any>, options?: any): Promise<any> {
         return Promise.reject(new Error("[selectAll] is not implemented."));
     }
 
     /**
      * Select all performing [in] values search.
      */
-    public static selectAllIn(key: string, inList: any[], options?: any): Promise {
+    public static selectAllIn(key: string, inList: any[], options?: any): Promise<any> {
         return this.selectAll({[key]: {$in: inList}}, options);
     }
 
     /**
      *
      */
-    public static selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise {
+    public static selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise<any> {
         return Promise.reject(new Error("[selectAllAsArray] is not implemented."));
     }
 
     /**
      * Select all as array performing [in] values search.
      */
-    public static selectAllAsArrayIn(key: string, inList: any[], options?: any, raw?: boolean): Promise {
+    public static selectAllAsArrayIn(key: string, inList: any[], options?: any, raw?: boolean): Promise<any> {
         return this.selectAllAsArray({[key]: {$in: inList}}, options, raw);
     }
 
     /**
      *
      */
-    public static selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise {
+    public static selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise<any> {
         return Promise.reject(new Error("[selectOne] is not implemented."));
     }
 
     /**
      *
      */
-    public static selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise {
+    public static selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise<any> {
         return this.selectOne(params, options, false, notFoundError);
     }
 
     /**
      *
      */
-    public static selectOneOrNew(params?: Dict<any>, options?: any): Promise {
+    public static selectOneOrNew(params?: Dict<any>, options?: any): Promise<any> {
         return Promise.reject(new Error("[selectOneOrNew] is not implemented."));
     }
 
     /**
      *
      */
-    public static selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise {
+    public static selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise<any> {
         return Promise.reject(new Error("[selectOneByPk] is not implemented."));
     }
 
     /**
      *
      */
-    public static selectOneByPkRaw(pk: any, notFoundError?: any): Promise {
-        return this.selectOneByPk(recordId, false, notFoundError);
+    public static selectOneByPkRaw(pk: any, notFoundError?: any): Promise<any> {
+        return this.selectOneByPk(pk, false, notFoundError);
     }
 
     /**
      *
      */
-    public static selectOneByPkOrNew(pk: any): Promise {
+    public static selectOneByPkOrNew(pk: any): Promise<any> {
         return Promise.reject(new Error("[selectOneByPkOrNew] is not implemented."));
     }
 
     /**
      *
      */
-    public static insertOne(values: Dict<any>, fullResult?: boolean): Promise {
+    public static insertOne(values: Dict<any>, fullResult?: boolean): Promise<any> {
         return Promise.reject(new Error("[insertOne] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateAll] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOne] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOneRaw] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOneByPk] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOneByPkRaw] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOneUnset] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOneByPkUnset] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOneUpsert(params: Dict<any> = {}, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOneUpsert(params: Dict<any> = {}, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOneUpsert] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise {
+    public static updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOneByPkUpsert] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise {
+    public static updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOrInsert] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise {
+    public static updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOrInsertByPk] is not implemented."));
     }
 
     /**
      *
      */
-    public static updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise {
+    public static updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any> {
         return Promise.reject(new Error("[updateOrInsertRaw] is not implemented."));
     }
 
     /**
      *
      */
-    public static delByPk(pk: string): Promise {
+    public static delByPk(pk: string): Promise<any> {
         let temp: any = {
             pk: pk,
         };
@@ -481,7 +481,7 @@ export class BaseModel extends EventEmitter {
     /**
      *
      */
-    public static oneByDocId(id: string, notFoundError?: any): Promise {
+    public static oneByDocId(id: string, notFoundError?: any): Promise<any> {
         let temp: any = {
             [this.idKey]: id,
         };
@@ -496,7 +496,7 @@ export class BaseModel extends EventEmitter {
     /**
      *
      */
-    public static oneByPk(pk: string, notFoundError?: any): Promise {
+    public static oneByPk(pk: string, notFoundError?: any): Promise<any> {
         let temp: any = {
             pk: pk,
         };
@@ -511,7 +511,7 @@ export class BaseModel extends EventEmitter {
     /**
      *
      */
-    public static updByPk(pk: string, values: any): Promise {
+    public static updByPk(pk: string, values: any): Promise<any> {
         let temp: any = {
             pk: pk,
         };
@@ -541,6 +541,8 @@ export class BaseModel extends EventEmitter {
      * Constructor.
      */
     constructor(values?: any) {
+        super();
+
         if (values) {
             this.assign(values);
         }
