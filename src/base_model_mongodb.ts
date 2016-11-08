@@ -3,6 +3,7 @@ import {BaseModel, Dict} from "./base_model";
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
 import {NotFoundError} from "./errors/not_found_error";
+import {InternalError} from "./errors/internal_error";
 
 export class BaseModelMongoDb extends BaseModel {
 
@@ -22,13 +23,27 @@ export class BaseModelMongoDb extends BaseModel {
      * Get MongoDb collection object reference.
      */
     public static getCollection(alias?: string) {
+        if (_.isFunction(this.db)) {
+            this.db = this.db();
+        }
+
+        if (this.db instanceof Promise) {
+            return this.db.then((db) => {
+                this.db = db;
+
+                return this.getCollection(alias);
+            });
+        }
+
         let collection = this.db.collection(alias ? alias : this.collection);
 
+        let resolved = Promise.resolve(collection);
+
         this.getCollection = (anotherAlias?: string) => {
-            return alias ? this.db.collection(anotherAlias) : collection;
+            return alias ? Promise.resolve(this.db.collection(anotherAlias)) : resolved;
         };
 
-        return collection;
+        return resolved;
     }
 
     /**
@@ -52,7 +67,7 @@ export class BaseModelMongoDb extends BaseModel {
      *
      * @returns {any}
      */
-    public static pkOrConditionDict(condition: any): any {
+    public static pkOrCond(condition: any): any {
         if (typeof this.pkKey === "string") {
             if (condition instanceof mongodb.ObjectID) {
                 return {[<string> this.pkKey]: condition};
@@ -69,17 +84,16 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static deleteAll(params?: Dict<any>, options?: any): Promise<any> {
+    public static deleteAll(params?: Dict<any>, opts?: any): Promise<any> {
         return new Promise<any>((rs, rj) => {
-            this.getCollection().deleteMany(
-                params, options,
-                (err: any, cur: any) => {
+            this.getCollection().then(
+                (col) => col.deleteMany(params, opts, (err: any, cur: any) => {
                     if (err) {
                         rj(new Error(err));
                     } else {
                         rs(cur);
                     }
-                }
+                })
             );
         });
     }
@@ -87,17 +101,16 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static deleteOne(params?: Dict<any>, options?: any): Promise<any> {
+    public static deleteOne(params?: Dict<any>, opts?: any): Promise<any> {
         return new Promise<any>((rs, rj) => {
-            this.getCollection().deleteOne(
-                params, options,
-                (err: any, res: any) => {
+            this.getCollection().then(
+                (col) => col.deleteOne(params, opts, (err: any, res: any) => {
                     if (err) {
                         rj(new Error(err));
                     } else {
                         res.result.n ? rs(res.result.n) : rj(new NotFoundError());
                     }
-                }
+                })
             );
         });
     }
@@ -107,15 +120,14 @@ export class BaseModelMongoDb extends BaseModel {
      */
     public static deleteOneByPk(pk: any): Promise<any> {
         return new Promise<any>((rs, rj) => {
-            this.getCollection().deleteOne(
-                this.pkOrConditionDict(pk),
-                (err: any, res: any) => {
+            this.getCollection().then(
+                (col) => col.deleteOne(this.pkOrCond(pk), (err: any, res: any) => {
                     if (err) {
                         rj(new Error(err));
                     } else {
                         res.result.n ? rs(res.result.n) : rj(new NotFoundError());
                     }
-                }
+                })
             );
         });
     }
@@ -123,17 +135,16 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectAll(params?: Dict<any>, options?: any): Promise<any> {
+    public static selectAll(params?: Dict<any>, opts?: any): Promise<any> {
         return new Promise<any>((rs, rj) => {
-            this.getCollection().find(
-                params, options,
-                (err: any, cur: any) => {
+            this.getCollection().then(
+                (col) => col.find(params, opts, (err: any, cur: any) => {
                     if (err) {
                         rj(new Error(err));
                     } else {
                         rs(cur);
                     }
-                }
+                })
             );
         });
     }
@@ -141,278 +152,301 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection().find(params, options || void 0).toArray(
-                (err: any, arr: any) => {
-                    if (err) {
-                        rj(new Error(err));
-                    } else {
-                        if (raw) {
-                            return rs(arr);
-                        }
-
-                        _.each(arr, (val: any, key: string) => {
-                            arr[key] = new this(val);
-                        });
-
-                        rs(arr);
+    public static selectAllAsArray(params?: Dict<any>, opts?: any, raw?: boolean): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.find(params, opts || void 0).toArray().then(
+                (res) => {
+                    if (raw) {
+                        return res;
                     }
+
+                    _.each(res, (val: any, key: string) => {
+                        res[key] = new this(val);
+                    });
+
+                    return res;
+                },
+                (err) => {
+                    throw new Error(err);
                 }
-            );
-        });
+            )
+        );
     }
 
     /**
      *
      */
-    public static selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .findOne(params, options || void 0)
-                .then(
-                    (doc) => {
-                        doc === null ? rj(new NotFoundError(notFoundError)) : rs(raw ? doc : new this(doc));
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static selectOne(params?: Dict<any>, opts?: any, raw?: boolean, notFoundError?: any): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.findOne(params, opts || void 0).then(
+                (doc) => {
+                    if (doc) {
+                        return raw ? doc : new this(doc);
                     }
-                );
-        });
+
+                    throw new NotFoundError(notFoundError);
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static selectOneOrNew(params?: Dict<any>, options?: any): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .findOne(params, options || void 0)
-                .then(
-                    (doc) => {
-                        doc === null ? rs(new this()) : rs(new this(doc));
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static selectOneOrNew(params?: Dict<any>, opts?: any): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.findOne(params, opts || void 0).then(
+                (doc) => {
+                    if (doc) {
+                        return new this(doc);
                     }
-                );
-        });
+
+                    return new this();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
     public static selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .findOne(this.pkOrConditionDict(pk))
-                .then(
-                    (doc) => {
-                        doc === null ? rj(new NotFoundError(notFoundError)) : rs(raw ? doc : new this(doc));
-                    },
-                    (err) => {
-                        rj(new Error(err));
+        return this.getCollection().then(
+            (col) => col.findOne(this.pkOrCond(pk)).then(
+                (doc) => {
+                    if (doc) {
+                        return raw ? doc : new this(doc);
                     }
-                );
-        });
+
+                    return new NotFoundError(notFoundError);
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
     public static selectOneByPkOrNew(pk: any): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .findOne(this.pkOrConditionDict(pk))
-                .then(
-                    (doc) => {
-                        doc === null ? rs(new this()) : rs(new this(doc));
-                    },
-                    (err) => {
-                        rj(new Error(err));
+        return this.getCollection().then(
+            (col) => col.findOne(this.pkOrCond(pk)).then(
+                (doc) => {
+                    if (doc) {
+                        return new this(doc);
                     }
-                );
-        });
+
+                    return new this();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
     public static insertOne(values: Dict<any>, fullResult?: boolean): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .insertOne(values)
-                .then(
-                    (doc) => {
-                        doc === null ? rj(new NotFoundError()) : rs(fullResult ? doc.ops : doc.insertedId);
-                    },
-                    (err) => {
-                        rj(new Error(err));
+        return this.getCollection().then(
+            (col) => col.insertOne(values).then(
+                (doc) => {
+                    if (doc) {
+                        return fullResult ? doc.ops : doc.insertedId;
                     }
-                );
-        });
+
+                    throw new InternalError("Insert failed.");
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .update(params, {$set: values}, _.extend({multi: true}, options))
-                .then(
-                    (doc) => {
-                        rs(doc.result.nModified);
-                    },
-                    (err) => {
-                        rj(new Error(err));
-                    }
-                );
-        });
+    public static updateAll(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.update(params, {$set: values}, _.extend({multi: true}, opts)).then(
+                (doc) => {
+                    return doc.result.nModified;
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(params, {$set: values}, options)
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOne(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(params, {$set: values}, opts).then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(params, values, options)
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOneRaw(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(params, values, opts).then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(this.pkOrConditionDict(pk), {$set: values}, options)
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOneByPk(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(this.pkOrCond(pk), {$set: values}, opts).then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(this.pkOrConditionDict(pk), values, options)
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOneByPkRaw(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(this.pkOrCond(pk), values, opts).then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(params, {$unset: values}, options)
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOneUnset(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(params, {$unset: values}, opts).then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(this.pkOrConditionDict(pk), _.extend({upsert: true}, options))
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOneByPkUnset(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then((col) => col.updateOne(this.pkOrCond(pk), _.extend({upsert: true}, opts))
+            .then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOneUpsert(params: Dict<any> = {}, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(params, {$set: values}, _.extend({upsert: true}, options))
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOneUpsert(params: Dict<any> = {}, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(params, {$set: values}, _.extend({upsert: true}, opts)).then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(this.pkOrConditionDict(pk), {$set: values}, _.extend({upsert: true}, options))
-                .then(
-                    (doc) => {
-                        doc.matchedCount ? rs(doc.result.nModified) : rj(new NotFoundError());
-                    },
-                    (err) => {
-                        rj(new Error(err));
+    public static updateOneByPkUpsert(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(this.pkOrCond(pk), {$set: values}, _.extend({upsert: true}, opts)).then(
+                (doc) => {
+                    if (doc.matchedCount) {
+                        return doc.result.nModified;
                     }
-                );
-        });
+
+                    throw new NotFoundError();
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
@@ -420,9 +454,8 @@ export class BaseModelMongoDb extends BaseModel {
      */
     public static updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any> {
         return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(params, {$set: values})
-                .then(
+            this.getCollection().then(
+                (col) => col.updateOne(params, {$set: values}).then(
                     (doc) => {
                         doc.matchedCount
                             ? rs(doc.result.nModified)
@@ -431,7 +464,8 @@ export class BaseModelMongoDb extends BaseModel {
                     (err) => {
                         rj(new Error(err));
                     }
-                );
+                )
+            );
         });
     }
 
@@ -440,9 +474,8 @@ export class BaseModelMongoDb extends BaseModel {
      */
     public static updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise<any> {
         return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(this.pkOrConditionDict(pk), {$set: values})
-                .then(
+            this.getCollection().then(
+                (col) => col.updateOne(this.pkOrCond(pk), {$set: values}).then(
                     (doc) => {
                         doc.matchedCount
                             ? rs(doc.result.nModified)
@@ -451,7 +484,8 @@ export class BaseModelMongoDb extends BaseModel {
                     (err) => {
                         rj(new Error(err));
                     }
-                );
+                )
+            );
         });
     }
 
@@ -460,9 +494,8 @@ export class BaseModelMongoDb extends BaseModel {
      */
     public static updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any> {
         return new Promise<any>((rs, rj) => {
-            this.getCollection()
-                .updateOne(params, values)
-                .then(
+            this.getCollection().then(
+                (col) => col.updateOne(params, values).then(
                     (doc) => {
                         doc.matchedCount
                             ? rs(doc.result.nModified)
@@ -471,7 +504,8 @@ export class BaseModelMongoDb extends BaseModel {
                     (err) => {
                         rj(new Error(err));
                     }
-                );
+                )
+            );
         });
     }
 
