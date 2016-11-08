@@ -1,5 +1,6 @@
 
 import {BadParameterError} from "./errors/bad_parameter_error";
+import {EventEmitter} from "events";
 import * as _ from "lodash";
 import {InternalError} from "./errors/internal_error";
 
@@ -155,7 +156,7 @@ function setDocPkClassAccessors(cls: any, pk: string|string[]): any {
     return cls;
 }
 
-export class BaseModel {
+export class BaseModel extends EventEmitter {
 
     // id field alias
     protected static idKey: number|string = "id";
