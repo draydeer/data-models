@@ -51,7 +51,7 @@ export class BaseModelMongoDb extends BaseModel {
      *
      * @param condition Mixed condition.
      *      If the model pk is a string tries to take condition as a primitive value and to cast it to the ObjectId
-     *      type.
+     *      type. Otherwise leaves it as-is.
      *
      *      model pk key = "_id"
      *      condition = "56bf7aa030042aff3e9c9339"
