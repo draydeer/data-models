@@ -3,7 +3,7 @@
   "description": "",
   "version": "1.0.0",
   "filename": "models.ts",
-  "main": "./src/models.min.js",
+  "main": "./src/models.js",
   "homepage": "https://github.com/draydeer/models",
   "repository": {
     "type": "git",
