@@ -2,13 +2,15 @@
     "compilerOptions": {
         "emitDecoratorMetadata": true,
         "module": "commonjs",
-        "outDir": ".",
+        "outDir": "./dist",
         "target": "ES5",
-        "rootDir": ".",
         "experimentalDecorators": true,
-        "removeComments": true
+        "removeComments": true,
+        "sourceRoot": "."
     },
     "exclude": [
-        "node_modules"
+        "dist",
+        "node_modules",
+        "typings"
     ]
 }

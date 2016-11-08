@@ -1,4 +1,4 @@
-
+///<reference path="../typings/index.d.ts"/>
 import {BadParameterError} from "./errors/bad_parameter_error";
 import {EventEmitter} from "events";
 import * as _ from "lodash";

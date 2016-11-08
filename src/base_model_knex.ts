@@ -1,5 +1,6 @@
-
+///<reference path="../typings/index.d.ts"/>
 import {BaseModel} from "./base_model";
+import * as _ from "lodash";
 
 export class BaseModelKnex extends BaseModel {
 
@@ -13,7 +14,7 @@ export class BaseModelKnex extends BaseModel {
      * @returns {any}
      */
     public static getCursorWhere(cursor: any, where: any, cb?: (stream: any) => void) {
-        if (this._().isEmpty(where) === false) {
+        if (_.isEmpty(where) === false) {
             let paramIndex = 100;
 
             for (let key in where) {
@@ -26,7 +27,7 @@ export class BaseModelKnex extends BaseModel {
                         continue;
                     }
 
-                    if (this._().isObject(where[key])) {
+                    if (_.isObject(where[key])) {
                         let w = where[key];
 
                         if ("$gt" in w) {

@@ -1,16 +1,4 @@
-
-declare class Error {
-
-    public message: any;
-
-    public name: string;
-
-    public stack: string;
-
-    constructor(message?: any);
-
-}
-
+///<reference path="../../typings/index.d.ts"/>
 export class BaseError extends Error {
 
     public name: string = "BaseError";

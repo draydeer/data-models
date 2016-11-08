@@ -1,4 +1,4 @@
-
+///<reference path="../typings/index.d.ts"/>
 import {BaseModelKnex} from "./base_model_knex";
 import {BaseModelMongoDb} from "./base_model_mongodb";
 import {BaseModelOrientJs} from "./base_model_orientjs";

@@ -1,4 +1,4 @@
-
+///<reference path="../typings/index.d.ts"/>
 import {BaseModel, Dict} from "./base_model";
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
@@ -34,8 +34,9 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      * Prepare dictionary with potential pk selector.
      *
-     * @param condition Mixed condition. If the model pk is a string tries to take condition as a primitive value and
-     *      cast it to the ObjectId type:
+     * @param condition Mixed condition.
+     *      If the model pk is a string tries to take condition as a primitive value and to cast it to the ObjectId
+     *      type.
      *
      *      model pk key = "_id"
      *      condition = "56bf7aa030042aff3e9c9339"
