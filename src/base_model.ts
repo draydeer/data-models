@@ -651,6 +651,11 @@ export class BaseModel extends EventEmitter {
                     $class.setDocPk(this, $id);
 
                     return res;
+                },
+                (err: any) => {
+                    $class.setDocPk(this, $id);
+
+                    return err;
                 }
             );
         } else {
@@ -663,6 +668,11 @@ export class BaseModel extends EventEmitter {
                     $class.setDocPk(this, $id);
 
                     return res;
+                },
+                (err: any) => {
+                    $class.setDocPk(this, $id);
+
+                    return err;
                 }
             );
         }
