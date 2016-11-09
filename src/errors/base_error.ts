@@ -5,7 +5,7 @@ export class BaseError extends Error {
 
     public name: string = "BaseError";
 
-    constructor(mixed?: any) {
+    constructor(message?: any) {
         super(message);
 
         this.message = message;
