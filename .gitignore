@@ -2,6 +2,7 @@
 *.js
 *.js.map
 *.map
+!dist/*/*.js
 coverage
 ignore*
 node_modules
