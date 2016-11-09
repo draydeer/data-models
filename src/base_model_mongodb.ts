@@ -84,6 +84,13 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
+    public static recordId(recordId: string|mongodb.ObjectID): mongodb.ObjectID {
+        return recordId instanceof mongodb.ObjectID ? recordId : new mongodb.ObjectID(recordId);
+    }
+
+    /**
+     *
+     */
     public static deleteAll(params?: Data, opts?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.deleteMany(params, opts).then(

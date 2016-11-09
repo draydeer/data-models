@@ -44,6 +44,9 @@ var BaseModelMongoDb = (function (_super) {
         return condition;
         var _a, _b;
     };
+    BaseModelMongoDb.recordId = function (recordId) {
+        return recordId instanceof mongodb.ObjectID ? recordId : new mongodb.ObjectID(recordId);
+    };
     BaseModelMongoDb.deleteAll = function (params, opts) {
         return this.getCollection().then(function (col) { return col.deleteMany(params, opts).then(function (res) {
             return res.result.n;

@@ -347,6 +347,10 @@ declare module "data-models" {
 		/**
 		 *
 		 */
+		static recordId(recordId: any): any;
+		/**
+		 *
+		 */
 		static deleteAll(params?: Data, opts?: any): Promise<any>;
 		/**
 		 *
