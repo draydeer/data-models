@@ -1,7 +1,8 @@
 declare module "data-models" {
 	export class BaseError extends Error {
+		message: string;
 		name: string;
-		constructor(mixed?: any);
+		constructor(message?: any);
 	}
 	export class BadParameterError extends BaseError {
 		name: string;
@@ -309,7 +310,6 @@ declare module "data-models" {
 		 */
 		static getCursorWhere(cursor: any, where: any, cb?: (stream: any) => void): any;
 	}
-
 	export class NotFoundError extends BaseError {
 		name: string;
 	}
