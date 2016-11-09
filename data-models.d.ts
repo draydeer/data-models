@@ -1,4 +1,4 @@
-declare module 'data-models/errors/base_error' {
+declare module "data-models" {
 	/// <reference path="../../typings/index.d.ts" />
 	/// <reference types="node" />
 	export class BaseError extends Error {
@@ -6,22 +6,16 @@ declare module 'data-models/errors/base_error' {
 	    constructor(mixed?: any);
 	}
 
-}
-declare module 'data-models/errors/bad_parameter_error' {
 	import { BaseError } from 'data-models/errors/base_error';
 	export class BadParameterError extends BaseError {
 	    name: string;
 	}
 
-}
-declare module 'data-models/errors/internal_error' {
 	import { BaseError } from 'data-models/errors/base_error';
 	export class InternalError extends BaseError {
 	    name: string;
 	}
 
-}
-declare module 'data-models/base_model' {
 	/// <reference path="../typings/index.d.ts" />
 	import { EventEmitter } from "events";
 	import * as _ from "lodash";
@@ -312,8 +306,6 @@ declare module 'data-models/base_model' {
 	    constructor(left: any, right: any, type: string);
 	}
 
-}
-declare module 'data-models/base_model_knex' {
 	/// <reference path="../typings/index.d.ts" />
 	import { BaseModel } from 'data-models/base_model';
 	export class BaseModelKnex extends BaseModel {
@@ -329,15 +321,11 @@ declare module 'data-models/base_model_knex' {
 	    static getCursorWhere(cursor: any, where: any, cb?: (stream: any) => void): any;
 	}
 
-}
-declare module 'data-models/errors/not_found_error' {
 	import { BaseError } from 'data-models/errors/base_error';
 	export class NotFoundError extends BaseError {
 	    name: string;
 	}
 
-}
-declare module 'data-models/base_model_mongodb' {
 	/// <reference path="../typings/index.d.ts" />
 	import { BaseModel, Data } from 'data-models/base_model';
 	export class BaseModelMongoDb extends BaseModel {
@@ -461,22 +449,16 @@ declare module 'data-models/base_model_mongodb' {
 	    static updateOrInsertRaw(params: Data, values: Data, insert: Data): Promise<any>;
 	}
 
-}
-declare module 'data-models/base_model_orientjs' {
 	/// <reference path="../typings/index.d.ts" />
 	import { BaseModel } from 'data-models/base_model';
 	export class BaseModelOrientJs extends BaseModel {
 	}
 
-}
-declare module 'data-models/base_model_rest' {
 	/// <reference path="../typings/index.d.ts" />
 	import { BaseModel } from 'data-models/base_model';
 	export class BaseModelRest extends BaseModel {
 	}
 
-}
-declare module 'data-models/index' {
 	/// <reference path="../typings/index.d.ts" />
 	import { BaseModelKnex } from 'data-models/base_model_knex';
 	import { BaseModelMongoDb } from 'data-models/base_model_mongodb';
