@@ -601,14 +601,14 @@ export class BaseModel extends EventEmitter {
     /**
      *
      */
-    public put(options?: {}) {
+    public put(options?: Data) {
         return this.getId() ? this.updateVersioned(options) : this.insert(options);
     }
 
     /**
      *
      */
-    public update(options?: {}) {
+    public update(options?: Data) {
         return this.getStaticClass().updateOneByPk(
             this.getStaticClass().getDocPk(this),
             _.omitBy(this, _.isUndefined),
@@ -625,7 +625,7 @@ export class BaseModel extends EventEmitter {
      *
      * @returns {Promise}
      */
-    public updateVersioned(options: {} = {}) {
+    public updateVersioned(options: Data = {}) {
         let $class = this.getStaticClass();
 
         let $id = $class.getDocPk(this);
