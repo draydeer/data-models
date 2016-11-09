@@ -167,7 +167,9 @@ export class BaseModelMongoDb extends BaseModel {
                     }
 
                     _.each(res, (val: any, key: string) => {
-                        res[key] = new this(val);
+                        res[key] = new this();
+
+                        res[key].assign(val);
                     });
 
                     return res;
@@ -187,7 +189,7 @@ export class BaseModelMongoDb extends BaseModel {
             (col) => col.findOne(params, opts || void 0).then(
                 (doc) => {
                     if (doc) {
-                        return raw ? doc : new this(doc);
+                        return raw ? doc : new this().assign(doc);
                     }
 
                     throw new NotFoundError(notFoundError);
@@ -207,7 +209,7 @@ export class BaseModelMongoDb extends BaseModel {
             (col) => col.findOne(params, opts || void 0).then(
                 (doc) => {
                     if (doc) {
-                        return new this(doc);
+                        return new this().assign(doc);
                     }
 
                     return new this();
@@ -227,7 +229,7 @@ export class BaseModelMongoDb extends BaseModel {
             (col) => col.findOne(this.pkOrCond(pk)).then(
                 (doc) => {
                     if (doc) {
-                        return raw ? doc : new this(doc);
+                        return raw ? doc : new this().assign(doc);
                     }
 
                     return new NotFoundError(notFoundError);
@@ -247,7 +249,7 @@ export class BaseModelMongoDb extends BaseModel {
             (col) => col.findOne(this.pkOrCond(pk)).then(
                 (doc) => {
                     if (doc) {
-                        return new this(doc);
+                        return new this().assign(doc);
                     }
 
                     return new this();
