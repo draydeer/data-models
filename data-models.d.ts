@@ -26,6 +26,7 @@ declare module 'data-models/base_model' {
 	import { EventEmitter } from "events";
 	import * as _ from "lodash";
 	export type Dict<T> = _.Dictionary<T>;
+	export type Data = Dict<any>;
 	export interface BaseModelStatic {
 	    check(validator: any, value: any): any;
 	    checkErrorsPromise(validator: any): Promise<any>;
@@ -38,32 +39,32 @@ declare module 'data-models/base_model' {
 	    setDocPk(doc: any, id: string): any;
 	    setDocVersion(doc: any, version: number): any;
 	    unsetDocVersion(doc: any): any;
-	    deleteAll(params?: Dict<any>, options?: any): Promise<any>;
-	    deleteOne(params?: Dict<any>, options?: any): Promise<any>;
+	    deleteAll(params?: Data, options?: any): Promise<any>;
+	    deleteOne(params?: Data, options?: any): Promise<any>;
 	    deleteOneByPk(pk: any): Promise<any>;
-	    selectAll(params?: Dict<any>, options?: any): Promise<any>;
+	    selectAll(params?: Data, options?: any): Promise<any>;
 	    selectAllIn(key: string, inList: any[], options?: any): Promise<any>;
-	    selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise<any>;
+	    selectAllAsArray(params?: Data, options?: any, raw?: boolean): Promise<any>;
 	    selectAllAsArrayIn(key: string, inList: any[], options?: any, raw?: boolean): Promise<any>;
-	    selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise<any>;
-	    selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise<any>;
-	    selectOneOrNew(params?: Dict<any>, options?: any): Promise<any>;
+	    selectOne(params?: Data, options?: any, raw?: boolean, notFoundError?: any): Promise<any>;
+	    selectOneRaw(params?: Data, options?: any, notFoundError?: any): Promise<any>;
+	    selectOneOrNew(params?: Data, options?: any): Promise<any>;
 	    selectOneByPk(pk: any, raw?: boolean, notFoundError?: any): Promise<any>;
 	    selectOneByPkRaw(pk: any, notFoundError?: any): Promise<any>;
 	    selectOneByPkOrNew(pk: any): Promise<any>;
-	    insertOne(values: Dict<any>, fullResult?: boolean): Promise<any>;
-	    updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOneUpsert(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
-	    updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
-	    updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise<any>;
-	    updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
+	    insertOne(values: Data, fullResult?: boolean): Promise<any>;
+	    updateAll(params: Data, values: Data, options?: Data): Promise<any>;
+	    updateOne(params: Data, values: Data, options?: Data): Promise<any>;
+	    updateOneRaw(params: Data, values: Data, options?: Data): Promise<any>;
+	    updateOneByPk(pk: any, values: Data, options?: Data): Promise<any>;
+	    updateOneByPkRaw(pk: any, values: Data, options?: Data): Promise<any>;
+	    updateOneUnset(params: Data, values: Data, options?: Data): Promise<any>;
+	    updateOneByPkUnset(pk: any, values: Data, options?: Data): Promise<any>;
+	    updateOneUpsert(params: Data, values: Data, options?: Data): Promise<any>;
+	    updateOneByPkUpsert(pk: any, values: Data, options?: Data): Promise<any>;
+	    updateOrInsert(params: Data, values: Data, insert: Data): Promise<any>;
+	    updateOrInsertByPk(pk: any, values: Data, insert: Data): Promise<any>;
+	    updateOrInsertRaw(params: Data, values: Data, insert: Data): Promise<any>;
 	}
 	export class BaseModel extends EventEmitter {
 	    protected static idKey: number | string;
@@ -76,15 +77,15 @@ declare module 'data-models/base_model' {
 	    /**
 	     * Get document primary key value.
 	     */
-	    static getDocPk(doc: Dict<any>, wantNull?: boolean): any;
+	    static getDocPk(doc: Data, wantNull?: boolean): any;
 	    /**
 	     * Get document primary key value as associated value of dictionary.
 	     */
-	    static getDocPkDict(doc: Dict<any>, wantNull?: boolean): any;
+	    static getDocPkDict(doc: Data, wantNull?: boolean): any;
 	    /**
 	     * Get document version.
 	     */
-	    static getDocVersion(doc: Dict<any>): number;
+	    static getDocVersion(doc: Data): number;
 	    /**
 	     *
 	     */
@@ -100,7 +101,7 @@ declare module 'data-models/base_model' {
 	    /**
 	     * Set document primary key value.
 	     */
-	    static setDocPk(doc: Dict<any>, pk: any): any;
+	    static setDocPk(doc: Data, pk: any): any;
 	    /**
 	     * Set document version.
 	     */
@@ -132,11 +133,11 @@ declare module 'data-models/base_model' {
 	    /**
 	     *
 	     */
-	    static deleteAll(params?: Dict<any>, options?: any): Promise<any>;
+	    static deleteAll(params?: Data, options?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static deleteOne(params?: Dict<any>, options?: any): Promise<any>;
+	    static deleteOne(params?: Data, options?: any): Promise<any>;
 	    /**
 	     *
 	     */
@@ -144,7 +145,7 @@ declare module 'data-models/base_model' {
 	    /**
 	     *
 	     */
-	    static selectAll(params?: Dict<any>, options?: any): Promise<any>;
+	    static selectAll(params?: Data, options?: any): Promise<any>;
 	    /**
 	     * Select all performing [in] values search.
 	     */
@@ -152,7 +153,7 @@ declare module 'data-models/base_model' {
 	    /**
 	     *
 	     */
-	    static selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise<any>;
+	    static selectAllAsArray(params?: Data, options?: any, raw?: boolean): Promise<any>;
 	    /**
 	     * Select all as array performing [in] values search.
 	     */
@@ -160,15 +161,15 @@ declare module 'data-models/base_model' {
 	    /**
 	     *
 	     */
-	    static selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise<any>;
+	    static selectOne(params?: Data, options?: any, raw?: boolean, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static selectOneRaw(params?: Dict<any>, options?: any, notFoundError?: any): Promise<any>;
+	    static selectOneRaw(params?: Data, options?: any, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static selectOneOrNew(params?: Dict<any>, options?: any): Promise<any>;
+	    static selectOneOrNew(params?: Data, options?: any): Promise<any>;
 	    /**
 	     *
 	     */
@@ -184,55 +185,55 @@ declare module 'data-models/base_model' {
 	    /**
 	     *
 	     */
-	    static insertOne(values: Dict<any>, fullResult?: boolean): Promise<any>;
+	    static insertOne(values: Data, fullResult?: boolean): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateAll(params: Data, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOne(params: Data, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneRaw(params: Data, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPk(pk: any, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPkRaw(pk: any, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneUnset(params: Data, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPkUnset(pk: any, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneUpsert(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneUpsert(params: Data, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPkUpsert(pk: any, values: Data, options?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
+	    static updateOrInsert(params: Data, values: Data, insert: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise<any>;
+	    static updateOrInsertByPk(pk: any, values: Data, insert: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
+	    static updateOrInsertRaw(params: Data, values: Data, insert: Data): Promise<any>;
 	    /**
 	     *
 	     */
@@ -338,7 +339,7 @@ declare module 'data-models/errors/not_found_error' {
 }
 declare module 'data-models/base_model_mongodb' {
 	/// <reference path="../typings/index.d.ts" />
-	import { BaseModel, Dict } from 'data-models/base_model';
+	import { BaseModel, Data } from 'data-models/base_model';
 	export class BaseModelMongoDb extends BaseModel {
 	    protected static collection: string;
 	    protected static db: any;
@@ -353,7 +354,7 @@ declare module 'data-models/base_model_mongodb' {
 	     *
 	     * @param condition Mixed condition.
 	     *      If the model pk is a string tries to take condition as a primitive value and to cast it to the ObjectId
-	     *      type.
+	     *      type. Otherwise leaves it as-is.
 	     *
 	     *      model pk key = "_id"
 	     *      condition = "56bf7aa030042aff3e9c9339"
@@ -369,35 +370,35 @@ declare module 'data-models/base_model_mongodb' {
 	     *
 	     * @returns {any}
 	     */
-	    static pkOrConditionDict(condition: any): any;
+	    static pkOrCond(condition: any): any;
 	    /**
 	     *
 	     */
-	    static deleteAll(params?: Dict<any>, options?: any): Promise<any>;
+	    static deleteAll(params?: Data, opts?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static deleteOne(params?: Dict<any>, options?: any): Promise<any>;
+	    static deleteOne(params?: Data, opts?: any, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static deleteOneByPk(pk: any): Promise<any>;
+	    static deleteOneByPk(pk: any, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static selectAll(params?: Dict<any>, options?: any): Promise<any>;
+	    static selectAll(params?: Data, opts?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static selectAllAsArray(params?: Dict<any>, options?: any, raw?: boolean): Promise<any>;
+	    static selectAllAsArray(params?: Data, opts?: any, raw?: boolean): Promise<any>;
 	    /**
 	     *
 	     */
-	    static selectOne(params?: Dict<any>, options?: any, raw?: boolean, notFoundError?: any): Promise<any>;
+	    static selectOne(params?: Data, opts?: any, raw?: boolean, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static selectOneOrNew(params?: Dict<any>, options?: any): Promise<any>;
+	    static selectOneOrNew(params?: Data, opts?: any): Promise<any>;
 	    /**
 	     *
 	     */
@@ -409,55 +410,55 @@ declare module 'data-models/base_model_mongodb' {
 	    /**
 	     *
 	     */
-	    static insertOne(values: Dict<any>, fullResult?: boolean): Promise<any>;
+	    static insertOne(values: Data, fullResult?: boolean): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateAll(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateAll(params: Data, values: Data, opts?: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOne(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOne(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneRaw(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneRaw(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPk(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPk(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPkRaw(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPkRaw(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneUnset(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneUnset(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPkUnset(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPkUnset(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneUpsert(params: Dict<any>, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneUpsert(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOneByPkUpsert(pk: any, values: Dict<any>, options?: Dict<any>): Promise<any>;
+	    static updateOneByPkUpsert(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
+	    static updateOrInsert(params: Data, values: Data, insert: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise<any>;
+	    static updateOrInsertByPk(pk: any, values: Data, insert: Data): Promise<any>;
 	    /**
 	     *
 	     */
-	    static updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any>;
+	    static updateOrInsertRaw(params: Data, values: Data, insert: Data): Promise<any>;
 	}
 
 }
