@@ -7,8 +7,9 @@ var __extends = (this && this.__extends) || function (d, b) {
 var BaseError = (function (_super) {
     __extends(BaseError, _super);
     function BaseError(mixed) {
-        _super.call(this, mixed);
+        _super.call(this, message);
         this.name = "BaseError";
+        this.message = message;
     }
     return BaseError;
 }(Error));

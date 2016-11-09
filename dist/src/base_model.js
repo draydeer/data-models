@@ -285,12 +285,18 @@ var BaseModel = (function (_super) {
             return this.getStaticClass().updateOne($class.setDocPk($class.setDocVersion({}, $vcUpdate), $id), _.omitBy(this, _.isUndefined), options).then(function (res) {
                 $class.setDocPk(_this, $id);
                 return res;
+            }, function (err) {
+                $class.setDocPk(_this, $id);
+                return err;
             });
         }
         else {
             return this.getStaticClass().updateOne($class.setDocPk({}, $id), _.omitBy(this, _.isUndefined), options).then(function (res) {
                 $class.setDocPk(_this, $id);
                 return res;
+            }, function (err) {
+                $class.setDocPk(_this, $id);
+                return err;
             });
         }
     };

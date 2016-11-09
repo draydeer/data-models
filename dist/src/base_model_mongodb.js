@@ -91,7 +91,8 @@ var BaseModelMongoDb = (function (_super) {
                 return res;
             }
             _.each(res, function (val, key) {
-                res[key] = new _this(val);
+                res[key] = new _this();
+                res[key].assign(val);
             });
             return res;
         }, function (err) {
@@ -102,7 +103,7 @@ var BaseModelMongoDb = (function (_super) {
         var _this = this;
         return this.getCollection().then(function (col) { return col.findOne(params, opts || void 0).then(function (doc) {
             if (doc) {
-                return raw ? doc : new _this(doc);
+                return raw ? doc : new _this().assign(doc);
             }
             throw new not_found_error_1.NotFoundError(notFoundError);
         }, function (err) {
@@ -113,7 +114,7 @@ var BaseModelMongoDb = (function (_super) {
         var _this = this;
         return this.getCollection().then(function (col) { return col.findOne(params, opts || void 0).then(function (doc) {
             if (doc) {
-                return new _this(doc);
+                return new _this().assign(doc);
             }
             return new _this();
         }, function (err) {
@@ -124,7 +125,7 @@ var BaseModelMongoDb = (function (_super) {
         var _this = this;
         return this.getCollection().then(function (col) { return col.findOne(_this.pkOrCond(pk)).then(function (doc) {
             if (doc) {
-                return raw ? doc : new _this(doc);
+                return raw ? doc : new _this().assign(doc);
             }
             return new not_found_error_1.NotFoundError(notFoundError);
         }, function (err) {
@@ -135,7 +136,7 @@ var BaseModelMongoDb = (function (_super) {
         var _this = this;
         return this.getCollection().then(function (col) { return col.findOne(_this.pkOrCond(pk)).then(function (doc) {
             if (doc) {
-                return new _this(doc);
+                return new _this().assign(doc);
             }
             return new _this();
         }, function (err) {
