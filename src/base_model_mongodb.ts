@@ -1,5 +1,5 @@
 ///<reference path="../typings/index.d.ts"/>
-import {BaseModel, Dict} from "./base_model";
+import {BaseModel, Data, Dict} from "./base_model";
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
 import {NotFoundError} from "./errors/not_found_error";
@@ -84,58 +84,57 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static deleteAll(params?: Dict<any>, opts?: any): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection().then(
-                (col) => col.deleteMany(params, opts, (err: any, cur: any) => {
-                    if (err) {
-                        rj(new Error(err));
-                    } else {
-                        rs(cur);
-                    }
-                })
-            );
-        });
+    public static deleteAll(params?: Data, opts?: any): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.deleteMany(params, opts).then(
+                (res) => {
+                    return res.result.n;
+                },
+                (err) => {
+                    throw new Error(err);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static deleteOne(params?: Dict<any>, opts?: any): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection().then(
-                (col) => col.deleteOne(params, opts, (err: any, res: any) => {
-                    if (err) {
-                        rj(new Error(err));
-                    } else {
-                        res.result.n ? rs(res.result.n) : rj(new NotFoundError());
+    public static deleteOne(params?: Data, opts?: any, notFoundError?: any): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.deleteOne(params, opts).then(
+                (res) => {
+                    if (res.result.n) {
+                        return res.result.n;
                     }
-                })
-            );
-        });
+                    
+                    throw new NotFoundError(notFoundError);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static deleteOneByPk(pk: any): Promise<any> {
-        return new Promise<any>((rs, rj) => {
-            this.getCollection().then(
-                (col) => col.deleteOne(this.pkOrCond(pk), (err: any, res: any) => {
-                    if (err) {
-                        rj(new Error(err));
-                    } else {
-                        res.result.n ? rs(res.result.n) : rj(new NotFoundError());
+    public static deleteOneByPk(pk: any, notFoundError?: any): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.deleteOne(this.pkOrCond(pk)).then(
+                (res) => {
+                    if (res.result.n) {
+                        return res.result.n;
                     }
-                })
-            );
-        });
+
+                    throw new NotFoundError(notFoundError);
+                }
+            )
+        );
     }
 
     /**
      *
      */
-    public static selectAll(params?: Dict<any>, opts?: any): Promise<any> {
+    public static selectAll(params?: Data, opts?: any): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.find(params, opts, (err: any, cur: any) => {
@@ -152,7 +151,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectAllAsArray(params?: Dict<any>, opts?: any, raw?: boolean): Promise<any> {
+    public static selectAllAsArray(params?: Data, opts?: any, raw?: boolean): Promise<any> {
         return this.getCollection().then(
             (col) => col.find(params, opts || void 0).toArray().then(
                 (res) => {
@@ -176,7 +175,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectOne(params?: Dict<any>, opts?: any, raw?: boolean, notFoundError?: any): Promise<any> {
+    public static selectOne(params?: Data, opts?: any, raw?: boolean, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.findOne(params, opts || void 0).then(
                 (doc) => {
@@ -196,7 +195,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectOneOrNew(params?: Dict<any>, opts?: any): Promise<any> {
+    public static selectOneOrNew(params?: Data, opts?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.findOne(params, opts || void 0).then(
                 (doc) => {
@@ -256,7 +255,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static insertOne(values: Dict<any>, fullResult?: boolean): Promise<any> {
+    public static insertOne(values: Data, fullResult?: boolean): Promise<any> {
         return this.getCollection().then(
             (col) => col.insertOne(values).then(
                 (doc) => {
@@ -276,7 +275,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateAll(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateAll(params: Data, values: Data, opts?: Data): Promise<any> {
         return this.getCollection().then(
             (col) => col.update(params, {$set: values}, _.extend({multi: true}, opts)).then(
                 (doc) => {
@@ -292,7 +291,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOne(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateOne(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, {$set: values}, opts).then(
                 (doc) => {
@@ -300,7 +299,7 @@ export class BaseModelMongoDb extends BaseModel {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -312,7 +311,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneRaw(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateOneRaw(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, values, opts).then(
                 (doc) => {
@@ -320,7 +319,7 @@ export class BaseModelMongoDb extends BaseModel {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -332,7 +331,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPk(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateOneByPk(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(this.pkOrCond(pk), {$set: values}, opts).then(
                 (doc) => {
@@ -340,7 +339,7 @@ export class BaseModelMongoDb extends BaseModel {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -352,7 +351,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPkRaw(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateOneByPkRaw(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(this.pkOrCond(pk), values, opts).then(
                 (doc) => {
@@ -360,7 +359,7 @@ export class BaseModelMongoDb extends BaseModel {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -372,7 +371,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneUnset(params: Dict<any>, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateOneUnset(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, {$unset: values}, opts).then(
                 (doc) => {
@@ -380,7 +379,7 @@ export class BaseModelMongoDb extends BaseModel {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -392,15 +391,15 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPkUnset(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
-        return this.getCollection().then((col) => col.updateOne(this.pkOrCond(pk), _.extend({upsert: true}, opts))
-            .then(
+    public static updateOneByPkUnset(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+        return this.getCollection().then(
+            (col) => col.updateOne(this.pkOrCond(pk), values, _.extend({upsert: true}, opts)).then(
                 (doc) => {
                     if (doc.matchedCount) {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -412,7 +411,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneUpsert(params: Dict<any> = {}, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateOneUpsert(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, {$set: values}, _.extend({upsert: true}, opts)).then(
                 (doc) => {
@@ -420,7 +419,7 @@ export class BaseModelMongoDb extends BaseModel {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -432,7 +431,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPkUpsert(pk: any, values: Dict<any>, opts?: Dict<any>): Promise<any> {
+    public static updateOneByPkUpsert(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(this.pkOrCond(pk), {$set: values}, _.extend({upsert: true}, opts)).then(
                 (doc) => {
@@ -440,7 +439,7 @@ export class BaseModelMongoDb extends BaseModel {
                         return doc.result.nModified;
                     }
 
-                    throw new NotFoundError();
+                    throw new NotFoundError(notFoundError);
                 },
                 (err) => {
                     throw new Error(err);
@@ -452,7 +451,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOrInsert(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any> {
+    public static updateOrInsert(params: Data, values: Data, insert: Data): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.updateOne(params, {$set: values}).then(
@@ -472,7 +471,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOrInsertByPk(pk: any, values: Dict<any>, insert: Dict<any>): Promise<any> {
+    public static updateOrInsertByPk(pk: any, values: Data, insert: Data): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.updateOne(this.pkOrCond(pk), {$set: values}).then(
@@ -492,7 +491,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOrInsertRaw(params: Dict<any>, values: Dict<any>, insert: Dict<any>): Promise<any> {
+    public static updateOrInsertRaw(params: Data, values: Data, insert: Data): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.updateOne(params, values).then(
