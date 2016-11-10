@@ -70,6 +70,12 @@ describe("MongoDb", () => {
             }
         );
 
+        let MockC = MockA.clone("123");
+
+        setTimeout(() => {
+            console.log(MockA.selectOne, MockC.selectOne);
+        }, 3000);
+
         MockB.insertOne({a: 2}).then(
             (r) => {
                 expect(true).toBe(1);

@@ -32,6 +32,9 @@ var BaseModelMongoDb = (function (_super) {
         };
         return resolved;
     };
+    BaseModelMongoDb.clone = function (db) {
+        return (_.extend(_super.clone.call(this), { db: db }));
+    };
     BaseModelMongoDb.pkOrCond = function (condition) {
         if (typeof this.pkKey === "string") {
             if (condition instanceof mongodb.ObjectID) {

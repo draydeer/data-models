@@ -1,9 +1,23 @@
 ///<reference path="../typings/index.d.ts"/>
-import {BaseModel, Data, Dict} from "./base_model";
+import {BaseModel, BaseModelStatic} from "./base_model";
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
 import {NotFoundError} from "./errors/not_found_error";
 import {InternalError} from "./errors/internal_error";
+
+export type PromiseMongoDb = Promise<mongodb.Db>;
+
+export type PromiseMongoDbCollection = Promise<mongodb.Collection>;
+
+export interface BaseModelMongoDbStatic extends BaseModelStatic {
+
+    getCollection(alias?: string): PromiseMongoDbCollection;
+
+    clone(db?: any): BaseModelMongoDbStatic;
+
+    pkOrCond(condition: any): any;
+
+}
 
 export class BaseModelMongoDb extends BaseModel {
 
@@ -11,7 +25,7 @@ export class BaseModelMongoDb extends BaseModel {
     protected static collection: string;
 
     // MongoDb instance
-    protected static db: any;
+    protected static db: mongodb.Db|PromiseMongoDb|(() => mongodb.Db|PromiseMongoDb);
 
     // primary key field alias
     protected static pkKey: string = "_id";
@@ -22,28 +36,35 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      * Get MongoDb collection object reference.
      */
-    public static getCollection(alias?: string) {
+    public static getCollection(alias?: string): PromiseMongoDbCollection {
         if (_.isFunction(this.db)) {
-            this.db = this.db();
+            this.db = (<() => mongodb.Db|PromiseMongoDb> this.db)();
         }
 
         if (this.db instanceof Promise) {
-            return this.db.then((db) => {
+            return (<PromiseMongoDb> this.db).then((db) => {
                 this.db = db;
 
                 return this.getCollection(alias);
             });
         }
 
-        let collection = this.db.collection(alias ? alias : this.collection);
+        let collection = (<mongodb.Db> this.db).collection(alias ? alias : this.collection);
 
         let resolved = Promise.resolve(collection);
 
-        this.getCollection = (anotherAlias?: string) => {
-            return alias ? Promise.resolve(this.db.collection(anotherAlias)) : resolved;
+        this.getCollection = (anotherAlias?: string): PromiseMongoDbCollection => {
+            return alias ? Promise.resolve((<mongodb.Db> this.db).collection(anotherAlias)) : resolved;
         };
 
         return resolved;
+    }
+
+    /**
+     *
+     */
+    public static clone(db?: any): BaseModelMongoDbStatic {
+        return <BaseModelMongoDbStatic> (_.extend(super.clone(), {db: db}));
     }
 
     /**
@@ -91,7 +112,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static deleteAll(params?: Data, opts?: any): Promise<any> {
+    public static deleteAll(params?: Object, opts?: Object): Promise<any> {
         return this.getCollection().then(
             (col) => col.deleteMany(params, opts).then(
                 (res) => {
@@ -107,7 +128,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static deleteOne(params?: Data, opts?: any, notFoundError?: any): Promise<any> {
+    public static deleteOne(params?: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.deleteOne(params, opts).then(
                 (res) => {
@@ -141,7 +162,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectAll(params?: Data, opts?: any): Promise<any> {
+    public static selectAll(params?: Object, opts?: Object): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.find(params, opts, (err: any, cur: any) => {
@@ -158,7 +179,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectAllAsArray(params?: Data, opts?: any, raw?: boolean): Promise<any> {
+    public static selectAllAsArray(params?: Object, opts?: Object, raw?: boolean): Promise<any> {
         return this.getCollection().then(
             (col) => col.find(params, opts || void 0).toArray().then(
                 (res) => {
@@ -184,7 +205,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectOne(params?: Data, opts?: any, raw?: boolean, notFoundError?: any): Promise<any> {
+    public static selectOne(params?: Object, opts?: Object, raw?: boolean, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.findOne(params, opts || void 0).then(
                 (doc) => {
@@ -204,7 +225,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectOneOrNew(params?: Data, opts?: any): Promise<any> {
+    public static selectOneOrNew(params?: Object, opts?: Object): Promise<any> {
         return this.getCollection().then(
             (col) => col.findOne(params, opts || void 0).then(
                 (doc) => {
@@ -264,7 +285,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static insertOne(values: Data, fullResult?: boolean): Promise<any> {
+    public static insertOne(values: Object, fullResult?: boolean): Promise<any> {
         return this.getCollection().then(
             (col) => col.insertOne(values).then(
                 (doc) => {
@@ -284,7 +305,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateAll(params: Data, values: Data, opts?: Data): Promise<any> {
+    public static updateAll(params: Object, values: Object, opts?: Object): Promise<any> {
         return this.getCollection().then(
             (col) => col.update(params, {$set: values}, _.extend({multi: true}, opts)).then(
                 (doc) => {
@@ -300,7 +321,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOne(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOne(params: Object, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, {$set: values}, opts).then(
                 (doc) => {
@@ -320,7 +341,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneRaw(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOneRaw(params: Object, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, values, opts).then(
                 (doc) => {
@@ -340,7 +361,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPk(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOneByPk(pk: any, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(this.pkOrCond(pk), {$set: values}, opts).then(
                 (doc) => {
@@ -360,7 +381,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPkRaw(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOneByPkRaw(pk: any, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(this.pkOrCond(pk), values, opts).then(
                 (doc) => {
@@ -380,7 +401,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneUnset(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOneUnset(params: Object, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, {$unset: values}, opts).then(
                 (doc) => {
@@ -400,7 +421,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPkUnset(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOneByPkUnset(pk: any, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(this.pkOrCond(pk), values, _.extend({upsert: true}, opts)).then(
                 (doc) => {
@@ -420,7 +441,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneUpsert(params: Data, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOneUpsert(params: Object, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(params, {$set: values}, _.extend({upsert: true}, opts)).then(
                 (doc) => {
@@ -440,7 +461,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOneByPkUpsert(pk: any, values: Data, opts?: Data, notFoundError?: any): Promise<any> {
+    public static updateOneByPkUpsert(pk: any, values: Object, opts?: Object, notFoundError?: any): Promise<any> {
         return this.getCollection().then(
             (col) => col.updateOne(this.pkOrCond(pk), {$set: values}, _.extend({upsert: true}, opts)).then(
                 (doc) => {
@@ -460,7 +481,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOrInsert(params: Data, values: Data, insert: Data): Promise<any> {
+    public static updateOrInsert(params: Object, values: Object, insert: Object): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.updateOne(params, {$set: values}).then(
@@ -480,7 +501,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOrInsertByPk(pk: any, values: Data, insert: Data): Promise<any> {
+    public static updateOrInsertByPk(pk: any, values: Object, insert: Object): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.updateOne(this.pkOrCond(pk), {$set: values}).then(
@@ -500,7 +521,7 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static updateOrInsertRaw(params: Data, values: Data, insert: Data): Promise<any> {
+    public static updateOrInsertRaw(params: Object, values: Object, insert: Object): Promise<any> {
         return new Promise<any>((rs, rj) => {
             this.getCollection().then(
                 (col) => col.updateOne(params, values).then(
