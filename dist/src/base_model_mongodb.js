@@ -5,10 +5,11 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var base_model_1 = require("./base_model");
+var internal_error_1 = require("./errors/internal_error");
+var not_found_error_1 = require("./errors/not_found_error");
 var _ = require("lodash");
 var mongodb = require("mongodb");
-var not_found_error_1 = require("./errors/not_found_error");
-var internal_error_1 = require("./errors/internal_error");
+var base_model_2 = require("./base_model");
 var BaseModelMongoDb = (function (_super) {
     __extends(BaseModelMongoDb, _super);
     function BaseModelMongoDb() {
@@ -25,15 +26,20 @@ var BaseModelMongoDb = (function (_super) {
                 return _this.getCollection(alias);
             });
         }
-        var collection = this.db.collection(alias ? alias : this.collection);
-        var resolved = Promise.resolve(collection);
+        var resolved;
+        if (_.isString(this.collection)) {
+            resolved = Promise.resolve(this.db.collection(alias || this.collection));
+        }
+        else {
+            resolved = Promise.resolve(this.collection);
+        }
         this.getCollection = function (anotherAlias) {
             return alias ? Promise.resolve(_this.db.collection(anotherAlias)) : resolved;
         };
+        if (alias) {
+            return Promise.resolve(this.db.collection(alias));
+        }
         return resolved;
-    };
-    BaseModelMongoDb.clone = function (db) {
-        return (_.extend(_super.clone.call(this), { db: db }));
     };
     BaseModelMongoDb.pkOrCond = function (condition) {
         if (typeof this.pkKey === "string") {
@@ -288,3 +294,42 @@ var BaseModelMongoDb = (function (_super) {
     return BaseModelMongoDb;
 }(base_model_1.BaseModel));
 exports.BaseModelMongoDb = BaseModelMongoDb;
+var BaseMapperMongoDb = (function (_super) {
+    __extends(BaseMapperMongoDb, _super);
+    function BaseMapperMongoDb(db, collection) {
+        _super.call(this);
+        this.pkKey = "_id";
+        this.versionKey = "_vc";
+        this.getCollection = BaseModelMongoDb.getCollection;
+        this.pkOrCond = BaseModelMongoDb.pkOrCond;
+        this.recordId = BaseModelMongoDb.recordId;
+        this.deleteAll = BaseModelMongoDb.deleteAll;
+        this.deleteOne = BaseModelMongoDb.deleteOne;
+        this.deleteOneByPk = BaseModelMongoDb.deleteOneByPk;
+        this.selectAll = BaseModelMongoDb.selectAll;
+        this.selectAllAsArray = BaseModelMongoDb.selectAllAsArray;
+        this.selectOne = BaseModelMongoDb.selectOneRaw;
+        this.selectOneOrNew = BaseModelMongoDb.selectOneOrNew;
+        this.selectOneByPk = BaseModelMongoDb.selectOneByPkRaw;
+        this.selectOneByPkOrNew = BaseModelMongoDb.selectOneByPkOrNew;
+        this.insertOne = BaseModelMongoDb.insertOne;
+        this.updateAll = BaseModelMongoDb.updateAll;
+        this.updateOne = BaseModelMongoDb.updateOne;
+        this.updateOneRaw = BaseModelMongoDb.updateOneRaw;
+        this.updateOneByPk = BaseModelMongoDb.updateOneByPk;
+        this.updateOneByPkRaw = BaseModelMongoDb.updateOneByPkRaw;
+        this.updateOneUnset = BaseModelMongoDb.updateOneUnset;
+        this.updateOneByPkUnset = BaseModelMongoDb.updateOneByPkUnset;
+        this.updateOneUpsert = BaseModelMongoDb.updateOneUpsert;
+        this.updateOneByPkUpsert = BaseModelMongoDb.updateOneByPkUpsert;
+        this.updateOrInsert = BaseModelMongoDb.updateOrInsert;
+        this.updateOrInsertByPk = BaseModelMongoDb.updateOrInsertByPk;
+        this.updateOrInsertRaw = BaseModelMongoDb.updateOrInsertRaw;
+        if (collection) {
+            this.collection = collection;
+        }
+        this.db = db;
+    }
+    return BaseMapperMongoDb;
+}(base_model_2.BaseMapper));
+exports.BaseMapperMongoDb = BaseMapperMongoDb;

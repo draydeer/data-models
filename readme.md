@@ -1,12 +1,18 @@
-### Typings generation
+# Data models and mappers
 
-Install dts-generator:
+Provides the common functionality like basic CRUD operations over a variety of data source drivers.
+Also provides the minimalistic functionality of the data model with the abstract saving method.
 
-```bash
-$ npm install dts-generator -g
-```
-Generate single d.ts:
+### Functionality purposes
 
-```bash
-$ dts-generator --name models --project src --out models.d.ts
-```
+The purposes of this functionality is to build a variety of common operations (CRUD most of all) with CERTAIN external behaviours wrapping series of low-level operations.
+The functionality IS NOT PRESENTED as the replacement is each case of a may be similar low-level operation of the corresponding driver.
+The functionality IS NOT PRESENTED as standardizing of similar low-level operations over all of the variety of drivers.
+If you need to do some specific operation over a driver use this driver directly.
+The functionality anyway exists as NOT ALTERNATIVE beside the low level functionality of the corresponding driver.
+
+### Functionality as-is
+
+The functionality provides two ways of working with the target driver - as the model and as the mapper.
+The model provides a class with the static CRUD methods and the some methods the minimalistic functionality of the data as an entity.
+The mapper provides a class with the static CRUD methods and the ability of configuring of the internal environment (as a service) in which these methods will work.

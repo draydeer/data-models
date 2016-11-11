@@ -3,6 +3,8 @@ import {BadParameterError} from "./errors/bad_parameter_error";
 import {EventEmitter} from "events";
 import * as _ from "lodash";
 import {InternalError} from "./errors/internal_error";
+import {BaseModelStatic} from "./";
+import {ModelMongoDb} from "./index";
 
 export type Dict<T> = _.Dictionary<T>;
 
@@ -159,25 +161,22 @@ function setDocPkClassAccessors(cls: any, pk: string|string[]): any {
 export class BaseModel extends EventEmitter {
 
     // id field alias
-    protected static idKey: number|string = "id";
+    public static idKey: number|string = "id";
 
     // primary key field alias
-    protected static pkKey: string|string[] = "?";
+    public static pkKey: string|string[] = "?";
 
     // [version control] field alias
-    protected static versionKey: string;
+    public static versionKey: string;
 
     // relations
-    protected static relations: Dict<BaseModelRelation>;
-
-    // active storage source such as collection
-    protected static source: string;
+    public static relations: Dict<BaseModelRelation>;
 
     // validator on select by document id - [id] field
-    protected static validatorOnSelectByDocId: any;
+    public static validatorOnSelectByDocId: any;
 
     // validator on select by record id - [_id] field
-    protected static validatorOnSelectByPk: any;
+    public static validatorOnSelectByPk: any;
 
     /**
      * Get document primary key value.
@@ -265,17 +264,6 @@ export class BaseModel extends EventEmitter {
      */
     public static checkErrorsPromise(validator: any): Promise<any> {
         return Promise.reject(new BadParameterError(this.onCheckGetErrors(validator)));
-    }
-
-    /**
-     *
-     */
-    public static clone(...args: any[]): BaseModelStatic {
-        let $class = () => {};
-
-        $class.prototype = this;
-
-        return <BaseModelStatic> (new $class());
     }
 
     /**
@@ -704,6 +692,124 @@ export class BaseModelRelation {
         this.left = left;
         this.right = right;
         this.type = type;
+    }
+
+}
+
+export class BaseMapper extends BaseModelStatic {
+
+    // id field alias
+    public idKey: number|string = "id";
+
+    // primary key field alias
+    public pkKey: string|string[] = "?";
+
+    // relations
+    public relations: Dict<BaseModelRelation>;
+
+    // validator on select by document id - [id] field
+    public validatorOnSelectByDocId: any;
+
+    // validator on select by record id - [_id] field
+    public validatorOnSelectByPk: any;
+
+    // [version control] field alias
+    public versionKey: string;
+
+    public getDocPk = ModelMongoDb.getDocPk;
+
+    public getDocPkDict = ModelMongoDb.getDocPkDict;
+
+    public getDocVersion = ModelMongoDb.getDocVersion;
+
+    public getIdKey = ModelMongoDb.getIdKey;
+
+    public getPkKey = ModelMongoDb.getPkKey;
+
+    public getVersionKey = ModelMongoDb.getVersionKey;
+
+    public setDocPk = ModelMongoDb.setDocPk;
+
+    public setDocVersion = ModelMongoDb.setDocVersion;
+
+    public unsetDocPk = ModelMongoDb.unsetDocPk;
+
+    public unsetDocVersion = ModelMongoDb.unsetDocVersion;
+
+    public check = ModelMongoDb.check;
+
+    public checkErrorsPromise = ModelMongoDb.checkErrorsPromise;
+
+    public recordId = ModelMongoDb.recordId;
+
+    public relation = ModelMongoDb.relation;
+
+    public deleteAll = ModelMongoDb.deleteAll;
+
+    public deleteOne = ModelMongoDb.deleteOne;
+
+    public deleteOneByPk = ModelMongoDb.deleteOneByPk;
+
+    public selectAll = ModelMongoDb.selectAll;
+
+    public selectAllIn = ModelMongoDb.selectAllIn;
+
+    public selectAllAsArray = ModelMongoDb.selectAllAsArray;
+
+    public selectAllAsArrayIn = ModelMongoDb.selectAllAsArrayIn;
+
+    public selectOne = ModelMongoDb.selectOne;
+
+    public selectOneRaw = ModelMongoDb.selectOneRaw;
+
+    public selectOneOrNew = ModelMongoDb.selectOneOrNew;
+
+    public selectOneByPk = ModelMongoDb.selectOneByPkRaw;
+
+    public selectOneByPkRaw = ModelMongoDb.selectOneByPkRaw;
+
+    public selectOneByPkOrNew = ModelMongoDb.selectOneByPkOrNew;
+
+    public insertOne = ModelMongoDb.insertOne;
+
+    public updateAll = ModelMongoDb.updateAll;
+
+    public updateOne = ModelMongoDb.updateOne;
+
+    public updateOneRaw = ModelMongoDb.updateOneRaw;
+
+    public updateOneByPk = ModelMongoDb.updateOneByPk;
+
+    public updateOneByPkRaw = ModelMongoDb.updateOneByPkRaw;
+
+    public updateOneUnset = ModelMongoDb.updateOneUnset;
+
+    public updateOneByPkUnset = ModelMongoDb.updateOneByPkUnset;
+
+    public updateOneUpsert = ModelMongoDb.updateOneUpsert;
+
+    public updateOneByPkUpsert = ModelMongoDb.updateOneByPkUpsert;
+
+    public updateOrInsert = ModelMongoDb.updateOrInsert;
+
+    public updateOrInsertByPk = ModelMongoDb.updateOrInsertByPk;
+
+    public updateOrInsertRaw = ModelMongoDb.updateOrInsertRaw;
+
+    public delByPk = ModelMongoDb.delByPk;
+
+    public oneByDocId = ModelMongoDb.oneByDocId;
+
+    public oneByPk = ModelMongoDb.oneByPk;
+
+    public updByPk = ModelMongoDb.updByPk;
+
+    protected onCheck(validator: any, value: any): boolean {
+        return true;
+    }
+
+    protected onCheckGetErrors(validator: any, checkingResult?: any): any {
+        return null;
     }
 
 }

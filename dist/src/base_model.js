@@ -108,20 +108,18 @@ var BaseModel = (function (_super) {
     BaseModel.checkErrorsPromise = function (validator) {
         return Promise.reject(new bad_parameter_error_1.BadParameterError(this.onCheckGetErrors(validator)));
     };
-    BaseModel.clone = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
-        }
-        var $class = function () { };
-        $class.prototype = this;
-        return (new $class());
-    };
     BaseModel.recordId = function (recordId) {
         return recordId;
     };
     BaseModel.relation = function (left, right, type) {
         return new BaseModelRelation(left, right, type);
+    };
+    BaseModel.specialize = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i - 0] = arguments[_i];
+        }
+        return (_.clone(this));
     };
     BaseModel.deleteAll = function (params, options) {
         return Promise.reject(new Error("[deleteAll] is not implemented."));

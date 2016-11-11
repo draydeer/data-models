@@ -1,13 +1,18 @@
 ///<reference path="../typings/index.d.ts"/>
 import {BaseModel, BaseModelStatic} from "./base_model";
+import {InternalError} from "./errors/internal_error";
+import {NotFoundError} from "./errors/not_found_error";
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
-import {NotFoundError} from "./errors/not_found_error";
-import {InternalError} from "./errors/internal_error";
+import {BaseMapper} from "./base_model";
 
 export type PromiseMongoDb = Promise<mongodb.Db>;
 
 export type PromiseMongoDbCollection = Promise<mongodb.Collection>;
+
+export type CollectionProperty = string|mongodb.Collection;
+
+export type DbProperty = mongodb.Db|PromiseMongoDb|(() => mongodb.Db|PromiseMongoDb);
 
 export interface BaseModelMongoDbStatic extends BaseModelStatic {
 
@@ -22,16 +27,16 @@ export interface BaseModelMongoDbStatic extends BaseModelStatic {
 export class BaseModelMongoDb extends BaseModel {
 
     // collection alias
-    protected static collection: string;
+    public static collection: CollectionProperty;
 
     // MongoDb instance
-    protected static db: mongodb.Db|PromiseMongoDb|(() => mongodb.Db|PromiseMongoDb);
+    public static db: DbProperty;
 
     // primary key field alias
-    protected static pkKey: string = "_id";
+    public static pkKey: string = "_id";
 
     // [version control] field alias
-    protected static versionKey: string = "_vc";
+    public static versionKey: string = "_vc";
 
     /**
      * Get MongoDb collection object reference.
@@ -49,22 +54,23 @@ export class BaseModelMongoDb extends BaseModel {
             });
         }
 
-        let collection = (<mongodb.Db> this.db).collection(alias ? alias : this.collection);
+        let resolved: PromiseMongoDbCollection;
 
-        let resolved = Promise.resolve(collection);
+        if (_.isString(this.collection)) {
+            resolved = Promise.resolve((<mongodb.Db> this.db).collection(alias || <string> this.collection));
+        } else {
+            resolved = Promise.resolve(this.collection);
+        }
 
         this.getCollection = (anotherAlias?: string): PromiseMongoDbCollection => {
             return alias ? Promise.resolve((<mongodb.Db> this.db).collection(anotherAlias)) : resolved;
         };
 
-        return resolved;
-    }
+        if (alias) {
+            return Promise.resolve((<mongodb.Db> this.db).collection(alias));
+        }
 
-    /**
-     *
-     */
-    public static clone(db?: any): BaseModelMongoDbStatic {
-        return <BaseModelMongoDbStatic> (_.extend(super.clone(), {db: db}));
+        return resolved;
     }
 
     /**
@@ -135,7 +141,7 @@ export class BaseModelMongoDb extends BaseModel {
                     if (res.result.n) {
                         return res.result.n;
                     }
-                    
+
                     throw new NotFoundError(notFoundError);
                 }
             )
@@ -225,15 +231,15 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectOneOrNew(params?: Object, opts?: Object): Promise<any> {
+    public static selectOneOrNew(params?: Object, opts?: Object, raw?: boolean): Promise<any> {
         return this.getCollection().then(
             (col) => col.findOne(params, opts || void 0).then(
                 (doc) => {
                     if (doc) {
-                        return new this().assign(doc);
+                        return raw ? doc : new this().assign(doc);
                     }
 
-                    return new this();
+                    return raw ? {} : new this();
                 },
                 (err) => {
                     throw new Error(err);
@@ -265,15 +271,15 @@ export class BaseModelMongoDb extends BaseModel {
     /**
      *
      */
-    public static selectOneByPkOrNew(pk: any): Promise<any> {
+    public static selectOneByPkOrNew(pk: any, raw?: boolean): Promise<any> {
         return this.getCollection().then(
             (col) => col.findOne(this.pkOrCond(pk)).then(
                 (doc) => {
                     if (doc) {
-                        return new this().assign(doc);
+                        return raw ? doc : new this().assign(doc);
                     }
 
-                    return new this();
+                    return raw ? {} : new this();
                 },
                 (err) => {
                     throw new Error(err);
@@ -537,5 +543,81 @@ export class BaseModelMongoDb extends BaseModel {
             );
         });
     }
+
+}
+
+export class BaseMapperMongoDb extends BaseMapper {
+
+    // collection alias
+    public collection: CollectionProperty;
+
+    // MongoDb instance
+    public db: DbProperty;
+
+    // primary key field alias
+    public pkKey: string = "_id";
+
+    // [version control] field alias
+    public versionKey: string = "_vc";
+
+    constructor(db: DbProperty, collection?: CollectionProperty) {
+        super();
+
+        if (collection) {
+            this.collection = collection;
+        }
+
+        this.db = db;
+    }
+
+    public getCollection = BaseModelMongoDb.getCollection;
+
+    public pkOrCond = BaseModelMongoDb.pkOrCond;
+
+    public recordId = BaseModelMongoDb.recordId;
+
+    public deleteAll = BaseModelMongoDb.deleteAll;
+
+    public deleteOne = BaseModelMongoDb.deleteOne;
+
+    public deleteOneByPk = BaseModelMongoDb.deleteOneByPk;
+
+    public selectAll = BaseModelMongoDb.selectAll;
+
+    public selectAllAsArray = BaseModelMongoDb.selectAllAsArray;
+
+    public selectOne = BaseModelMongoDb.selectOneRaw;
+
+    public selectOneOrNew = BaseModelMongoDb.selectOneOrNew;
+
+    public selectOneByPk = BaseModelMongoDb.selectOneByPkRaw;
+
+    public selectOneByPkOrNew = BaseModelMongoDb.selectOneByPkOrNew;
+
+    public insertOne = BaseModelMongoDb.insertOne;
+
+    public updateAll = BaseModelMongoDb.updateAll;
+
+    public updateOne = BaseModelMongoDb.updateOne;
+
+    public updateOneRaw = BaseModelMongoDb.updateOneRaw;
+
+    public updateOneByPk = BaseModelMongoDb.updateOneByPk;
+
+    public updateOneByPkRaw = BaseModelMongoDb.updateOneByPkRaw;
+
+    public updateOneUnset = BaseModelMongoDb.updateOneUnset;
+
+    public updateOneByPkUnset = BaseModelMongoDb.updateOneByPkUnset;
+
+    public updateOneUpsert = BaseModelMongoDb.updateOneUpsert;
+
+    public updateOneByPkUpsert = BaseModelMongoDb.updateOneByPkUpsert;
+
+    public updateOrInsert = BaseModelMongoDb.updateOrInsert;
+
+    public updateOrInsertByPk = BaseModelMongoDb.updateOrInsertByPk;
+
+    public updateOrInsertRaw = BaseModelMongoDb.updateOrInsertRaw;
 
 }
